@@ -35,6 +35,7 @@ Third-party MCP servers provide analytics data useful before, during, and after 
 | Check protocol TVL, fees, yields        | DefiLlama, Philidor          | [defi-tvl.md](defi-tvl.md)                         |
 | Analyze DEX pools, OHLCV, trades        | DexPaprika                   | [dex-pools.md](dex-pools.md)                       |
 | Assess DeFi vault risk                  | Philidor                     | [defi-tvl.md](defi-tvl.md)                         |
+| Cross-chain swap quotes and volume      | SODAX                        | See sodax endpoint below                           |
 | Token security / rug pull check         | Hive                         | [onchain-explorer.md](onchain-explorer.md)         |
 | Query balances directly (no MCP)        | ethers, viem, cast, web3     | Direct Balance Queries below                       |
 
@@ -112,6 +113,8 @@ All analytics MCPs are free and require no API key:
 | DexPaprika       | No               | Hosted: `https://mcp.dexpaprika.com/streamable-http` |
 | DefiLlama        | No               | Local: `npx -y @nic0xflamel/defillama-mcp-server` |
 | mcp-crypto-price | No               | Local: `npx -y mcp-crypto-price`                  |
+| SODAX            | No               | Hosted: `https://builders.sodax.com/mcp`          |
+| Arcadia Finance  | No               | Hosted: `https://mcp.arcadia.finance/mcp`         |
 
 ---
 

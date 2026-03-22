@@ -108,72 +108,109 @@ Returns: contract address, name, decimals, total supply.
 
 ## Hive Intelligence (Multi-Chain Analytics — No API Key, Hosted)
 
-Comprehensive Web3 data across 60+ blockchains with 351 endpoints spanning 14 analytics categories. Uses a meta-tool pattern: category tools return endpoint lists, then `invoke_api_endpoint` calls them.
+320+ tools across 10 sub-servers covering market data, DeFi, DEX, portfolios, tokens, NFTs, security, sentiment, network infra, and search. Each sub-server exposes tools directly — no meta-tool indirection needed.
 
 ### Installation
 
-Hosted endpoint (no install, no key):
+Connect to individual sub-servers by category. Each is a separate hosted endpoint:
 
 ```bash
-# Claude Code
-claude mcp add --transport http hive https://hiveintelligence.xyz/mcp
+# Claude Code — add the sub-servers you need
+claude mcp add --transport http hive-security https://mcp.hiveintelligence.xyz/hive_security_risk/mcp
+claude mcp add --transport http hive-portfolio https://mcp.hiveintelligence.xyz/hive_portfolio_wallet/mcp
+claude mcp add --transport http hive-tokens https://mcp.hiveintelligence.xyz/hive_token_contract/mcp
+claude mcp add --transport http hive-defi https://mcp.hiveintelligence.xyz/hive_defi_protocol/mcp
+claude mcp add --transport http hive-dex https://mcp.hiveintelligence.xyz/hive_onchain_dex/mcp
+claude mcp add --transport http hive-market https://mcp.hiveintelligence.xyz/hive_market_data/mcp
 ```
 
 ```json
-// Claude Desktop
+// Claude Desktop — example with security + portfolio
 {
   "mcpServers": {
-    "hive": {
+    "hive-security": {
       "type": "streamable-http",
-      "url": "https://hiveintelligence.xyz/mcp"
+      "url": "https://mcp.hiveintelligence.xyz/hive_security_risk/mcp"
+    },
+    "hive-portfolio": {
+      "type": "streamable-http",
+      "url": "https://mcp.hiveintelligence.xyz/hive_portfolio_wallet/mcp"
     }
   }
 }
 ```
 
-### How It Works
+### Sub-Server Catalog
 
-Hive uses a two-step pattern:
+| Sub-Server | Endpoint | Tools | Focus |
+|------------|----------|-------|-------|
+| Security & Risk | `mcp.hiveintelligence.xyz/hive_security_risk/mcp` | 20 | Token security, rug pull detection, malicious address check, approval security, phishing |
+| Portfolio & Wallet | `mcp.hiveintelligence.xyz/hive_portfolio_wallet/mcp` | 38 | Wallet balances, token holdings, DeFi positions, transaction history across chains |
+| Token & Contract | `mcp.hiveintelligence.xyz/hive_token_contract/mcp` | 27 | Token info, top holders, holder charts, token filtering, contract details |
+| DeFi Protocol | `mcp.hiveintelligence.xyz/hive_defi_protocol/mcp` | 23 | Protocol TVL, fees, yields, global DeFi stats |
+| On-Chain DEX | `mcp.hiveintelligence.xyz/hive_onchain_dex/mcp` | 44 | Pool analytics, trending pools, OHLCV, trades, DEX data |
+| Market Data | `mcp.hiveintelligence.xyz/hive_market_data/mcp` | 80 | Prices, market charts, OHLCV, gainers/losers, exchange data |
+| NFT Analytics | `mcp.hiveintelligence.xyz/hive_nft_analytics/mcp` | 37 | NFT collections, marketplace data, floor prices, tickers |
+| Social Sentiment | `mcp.hiveintelligence.xyz/hive_social_sentiment/mcp` | 17 | Topic news/posts, sentiment metrics, trending topics |
+| Network Infra | `mcp.hiveintelligence.xyz/hive_network_infrastructure/mcp` | 24 | Network status, gas prices, blockchain stats |
+| Search & Discovery | `mcp.hiveintelligence.xyz/hive_search_discovery/mcp` | 10 | Search tokens/protocols, trending, categories, new coins |
 
-1. **Discover endpoints** — call a category tool (e.g., `get_portfolio_wallet_endpoints`) to get available endpoints and their schemas.
-2. **Invoke endpoint** — call `invoke_api_endpoint` with the endpoint name and arguments.
+### Key Tools by Use Case
 
-### Category Tools
+**Token Security (hive_security_risk):**
 
-| Tool | Description |
-|------|-------------|
-| `get_market_and_price_endpoints` | Real-time and historical crypto price data |
-| `get_onchain_dex_pool_endpoints` | DEX and pool analytics |
-| `get_portfolio_wallet_endpoints` | Wallet balances, transaction history |
-| `get_token_contract_endpoints` | Token and contract analysis |
-| `get_defi_protocol_endpoints` | DeFi protocol analytics |
-| `get_nft_analytics_endpoints` | NFT collection and marketplace data |
-| `get_security_risk_endpoints` | Token security analysis, rug pull detection |
-| `get_network_infrastructure_endpoints` | Network health, gas prices |
-| `get_search_discovery_endpoints` | Trending tokens, search |
-| `get_social_sentiment_endpoints` | Social media analytics, sentiment |
-
-### Utility Tools
-
-| Tool | Parameters (\* = required) | Description |
+| Tool | Parameters (* = required) | Description |
 |------|-----------|-------------|
-| `get_api_endpoint_schema` | `endpoint`\* | Get schema for a specific endpoint |
-| `invoke_api_endpoint` | `endpoint_name`\*, `args`\* (object) | Call any Hive endpoint with arguments |
+| `get_token_security` | `chainId`*, `contract_addresses`* | Token security analysis (honeypot, tax, owner privileges) |
+| `get_nft_security` | `chainId`*, `contract_addresses`* | NFT contract security check |
+| `check_malicious_address` | `address`* | Check if address is flagged as malicious |
+| `check_approval_security` | `chainId`*, `contract_addresses`* | Approval risk analysis for a contract |
+| `get_wallet_approvals` | `chainId`*, `address`* | List all token approvals for a wallet |
+| `check_dapp_security` | `url`* | DApp security check |
+| `check_phishing_site` | `url`* | Phishing site detection |
 
-### Example: Check Token Security Before Swap
+**Portfolio (hive_portfolio_wallet):**
+
+| Tool | Parameters (* = required) | Description |
+|------|-----------|-------------|
+| `get_wallet_balance` | `id`*, `chain_id` | Wallet balance on a chain |
+| `get_wallet_token_balances` | `id`*, `is_all`, `chain_ids` | Token balances across chains |
+| `get_wallet_defi_positions_all_chains` | `id`*, `chain_ids` | DeFi positions across all chains |
+| `get_wallet_history` | `id`*, `chain_id`* | Transaction history |
+
+**Token Data (hive_token_contract):**
+
+| Tool | Parameters (* = required) | Description |
+|------|-----------|-------------|
+| `get_token_info` | `network`*, `address`* | Token metadata and on-chain info |
+| `get_token_top_holders` | `network`*, `address`* | Top token holders |
+| `get_token_details` | `networkId`*, `address`* | Detailed token information |
+
+### Example: Security Check Before Swap
 
 ```
-1. Discover security endpoints:
-   Call mcp__hive__get_security_risk_endpoints
+1. Check if the destination token is safe:
+   Call mcp__hive_security__get_token_security:
+     chainId: "1"
+     contract_addresses: "0xTokenAddress..."
 
-2. Get schema for token security check:
-   Call mcp__hive__get_api_endpoint_schema:
-     endpoint: "token_security_check"
+2. Review: is_honeypot, buy_tax, sell_tax, owner_change_balance,
+   can_take_back_ownership, is_open_source
 
-3. Check the token:
-   Call mcp__hive__invoke_api_endpoint:
-     endpoint_name: "token_security_check"
-     args: { "chain": "ethereum", "address": "0xTokenAddress..." }
+3. If flagged → warn user and suggest alternatives.
+   If clean → proceed to ../swap/SKILL.md.
+```
+
+### Example: Portfolio Overview Before Bridge
+
+```
+1. Call mcp__hive_portfolio__get_wallet_token_balances:
+     id: "0xYourWallet"
+     is_all: true
+
+2. Identify which chains have the most of the target token.
+
+3. Bridge from the chain with the highest balance.
 ```
 
 ---
@@ -189,7 +226,7 @@ Hive uses a two-step pattern:
 | Token holdings for an address | Blockscout | `get_tokens_by_address` |
 | Transfer history by time range | Blockscout | `get_transactions_by_address` |
 | Block details | Blockscout | `get_block_info` |
-| Token security / rug pull check | Hive | `get_security_risk_endpoints` → `invoke_api_endpoint` |
-| Multi-chain portfolio overview | Hive | `get_portfolio_wallet_endpoints` → `invoke_api_endpoint` |
-| Social sentiment analysis | Hive | `get_social_sentiment_endpoints` → `invoke_api_endpoint` |
-| NFT analytics | Hive | `get_nft_analytics_endpoints` → `invoke_api_endpoint` |
+| Token security / rug pull check | Hive (hive-security) | `get_token_security` |
+| Multi-chain portfolio overview | Hive (hive-portfolio) | `get_wallet_token_balances` |
+| Social sentiment analysis | Hive (hive-sentiment) | Connect `hive_social_sentiment` sub-server |
+| NFT analytics | Hive (hive-nft) | Connect `hive_nft_analytics` sub-server |

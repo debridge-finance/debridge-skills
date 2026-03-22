@@ -304,6 +304,77 @@ claude mcp add --transport http philidor https://mcp.philidor.io/api/mcp
 
 ---
 
+## Arcadia Finance (LP Management & Lending — No API Key, Hosted)
+
+DeFi LP management and lending protocol with tools for pool analytics, LP strategy evaluation, and position management. Use to assess lending pool rates and LP strategies on destination chains before/after bridging.
+
+### Installation
+
+Hosted endpoint (no install, no key):
+
+```bash
+# Claude Code
+claude mcp add --transport http arcadia https://mcp.arcadia.finance/mcp
+```
+
+```json
+// Claude Desktop
+{
+  "mcpServers": {
+    "arcadia": {
+      "type": "streamable-http",
+      "url": "https://mcp.arcadia.finance/mcp"
+    }
+  }
+}
+```
+
+### Key Tools (Read — Analytics)
+
+| Tool | Parameters (\* = required) | Description |
+|------|-----------|-------------|
+| `read_pool_list` | `chain_id` | All lending pools: TVL, utilization, liquidity, interest rate |
+| `read_pool_info` | `pool_address`\*, `days`, `chain_id` | Pool detail with APY history over time |
+| `read_strategy_list` | `featured_only`, `limit`, `offset`, `chain_id` | LP strategies with APY per range width |
+| `read_strategy_info` | `strategy_id`\*, `chain_id` | Full strategy detail: APY, range widths |
+| `read_asset_list` | `search`, `chain_id` | Supported collateral assets |
+| `read_asset_prices` | `asset_addresses`\*, `chain_id` | USD prices for assets |
+| `read_account_info` | `account_address`\*, `chain_id` | Account health factor, collateral, debt |
+| `read_account_pnl` | `account_address`\*, `chain_id` | PnL and yield earned |
+| `read_strategy_recommendation` | `account_address`\*, `chain_id` | Rebalancing recommendation for an account |
+
+### Key Tools (Write — Position Management)
+
+| Tool | Parameters (\* = required) | Description |
+|------|-----------|-------------|
+| `write_account_deposit` | `account_address`\*, `asset_addresses`\*, `asset_amounts`\*, `chain_id` | Build deposit tx (collateral) |
+| `write_account_withdraw` | `account_address`\*, `asset_addresses`\*, `asset_amounts`\*, `chain_id` | Build withdrawal tx |
+| `write_account_borrow` | `pool_address`\*, `account_address`\*, `amount`\*, `to`\*, `chain_id` | Build borrow tx |
+| `write_account_add_liquidity` | `account_address`\*, `wallet_address`\*, `positions`\*, `chain_id` | Flash-action: deposit + LP in one tx |
+| `write_account_swap` | `account_address`\*, `asset_from`\*, `asset_to`\*, `amount_in`\*, `chain_id` | Flash-action: swap within account |
+
+### Example: Evaluate LP Strategies Before Bridging
+
+```
+1. List featured LP strategies on the destination chain:
+   Call mcp__arcadia__read_strategy_list:
+     featured_only: true
+     chain_id: 8453
+
+2. Get detail for the top strategy:
+   Call mcp__arcadia__read_strategy_info:
+     strategy_id: <id from step 1>
+
+3. Check lending pool rates:
+   Call mcp__arcadia__read_pool_list:
+     chain_id: 8453
+
+4. Compare APY vs risk → advise user on best deployment
+   after bridging via ../swap/SKILL.md.
+```
+
+---
+
 ## Data Coverage
 
 DefiLlama tracks 5,000+ protocols across 250+ chains. Data categories:
