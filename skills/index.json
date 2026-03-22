@@ -26,7 +26,7 @@
     },
     {
       "name": "debridge-analytics",
-      "description": "Query DeFi analytics and on-chain data from third-party MCP servers. Covers token prices (CoinGecko, Crypto.com), on-chain lookups (Blockscout, Hive Intelligence), protocol TVL and vault risk (DefiLlama, Philidor), and DEX pools (DexPaprika). All free, no API key.",
+      "description": "Query DeFi analytics and on-chain data from third-party MCP servers to make informed bridging and swapping decisions. Covers token prices and exchange data (CoinGecko, Crypto.com, mcp-crypto-price), on-chain lookups and multi-chain analytics (Blockscout, Hive Intelligence), protocol TVL, yields, and vault risk (DefiLlama, Philidor), and DEX pool liquidity (DexPaprika). All servers are free and require no API key. Use this skill whenever the user asks about token prices, wallet balances, portfolio overview, transaction history, protocol TVL, DEX liquidity, yield opportunities, orderbook depth, vault risk, or on-chain data. Also use for: \"what's the price of ETH\", \"check my balance\", \"show me the TVL of Aave\", \"is there enough liquidity to swap\", \"look up this transaction\", \"what's the risk of this vault\".",
       "entry_point": "skills/analytics/SKILL.md",
       "references": [
         "skills/analytics/balance-cast.md",

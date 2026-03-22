@@ -18,55 +18,18 @@ Two npm packages are available. Both wrap the DefiLlama public API.
 Dynamically generates tools from the full DefiLlama OpenAPI surface.
 
 ```bash
-# One-shot
-npx -y @nic0xflamel/defillama-mcp-server
-
-# Persistent
-npm install -g @nic0xflamel/defillama-mcp-server
-
-# Claude Code
 claude mcp add defillama -- npx -y @nic0xflamel/defillama-mcp-server
-```
-
-```json
-// Claude Desktop
-{
-  "mcpServers": {
-    "defillama": {
-      "command": "npx",
-      "args": ["-y", "@nic0xflamel/defillama-mcp-server"]
-    }
-  }
-}
 ```
 
 ### @iqai/defillama-mcp (curated tools with AI entity resolution)
 
-19 typed tools with fuzzy matching on protocol and chain names. Includes token pricing endpoints not available in @nic0xflamel.
+19 typed tools with fuzzy matching on protocol/chain names. Includes token pricing endpoints not in @nic0xflamel.
 
 ```bash
-# One-shot
-pnpm dlx @iqai/defillama-mcp
-
-# Claude Code
 claude mcp add defillama -- pnpm dlx @iqai/defillama-mcp
 ```
 
-```json
-// Claude Desktop
-{
-  "mcpServers": {
-    "defillama": {
-      "command": "pnpm",
-      "args": ["dlx", "@iqai/defillama-mcp"]
-    }
-  }
-}
-```
-
-Tool names differ between the two packages. Both are verified — see sections below.
-
-No API key required for either package.
+No API key required for either package. Tool names differ — see sections below.
 
 ---
 
@@ -175,67 +138,22 @@ All @iqai tools support AI entity resolution — pass protocol/chain names as-is
 
 ---
 
-## Tool Name Mapping
-
-Both packages cover the same data. Quick mapping:
-
-| Category | @nic0xflamel | @iqai |
-|----------|-------------|-------|
-| All chains TVL | `get_v2_chains` | `defillama_get_chains` |
-| Protocol TVL | `get_tvl__by_protocol` | `defillama_get_protocol_data` |
-| Historical chain TVL | `get_v2_historicalChainTvl__by_chain` | `defillama_get_historical_chain_tvl` |
-| DEX volumes | `get_overview_dexs` | `defillama_get_dexs_data` |
-| Fees/revenue | `get_overview_fees` | `defillama_get_fees_and_revenue` |
-| Yield pools | `get_pools` | `defillama_get_latest_pool_data` |
-| Pool history | `get_chart__by_pool` | `defillama_get_historical_pool_data` |
-| Token prices | — | `defillama_get_prices_current_coins` |
-
----
-
 ## Example: Research Before a Large Bridge
 
-Using @nic0xflamel tool names (prefix with `mcp__defillama__` when calling via MCP):
-
 ```
-1. Check deBridge TVL:
-   Call mcp__defillama__get_tvl__by_protocol:
-     protocol: "debridge"
+1. Check deBridge TVL → get_tvl__by_protocol (protocol: "debridge")
+   or defillama_get_protocol_data (protocol: "debridge")
 
-2. Check yield opportunities on destination chain:
-   Call mcp__defillama__get_pools
-   (filter results client-side by chain and sort by APY)
+2. Check yield on destination chain → get_pools or defillama_get_latest_pool_data
+   (sortCondition: "apy", order: "desc", limit: 10)
 
-3. Check stablecoin market cap trends:
-   Call mcp__defillama__get_stablecoincharts_all
+3. Verify token price (@iqai only) → defillama_get_prices_current_coins
+   (coins: "ethereum:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
 
-4. Use findings to advise the user on which chain and token
-   to bridge to for the best yield or liquidity.
+4. Use findings to advise on best chain/token for yield or liquidity.
 ```
 
-Using @iqai tool names:
-
-```
-1. Call mcp__defillama__defillama_get_protocol_data:
-     protocol: "debridge"
-
-2. Call mcp__defillama__defillama_get_latest_pool_data:
-     sortCondition: "apy"
-     order: "desc"
-     limit: 10
-
-3. Call mcp__defillama__defillama_get_stablecoin_chains
-```
-
-## Example: Verify Token Price via Contract Address (@iqai only)
-
-```
-Call mcp__defillama__defillama_get_prices_current_coins:
-  coins: "ethereum:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-
-Returns: { price: 1.0001, symbol: "USDC", ... }
-```
-
-Supported chain slugs: `ethereum`, `bsc`, `polygon`, `arbitrum`, `optimism`, `base`, `avalanche`, `solana`.
+Chain slugs for pricing: `ethereum`, `bsc`, `polygon`, `arbitrum`, `optimism`, `base`, `avalanche`, `solana`.
 
 For token pricing without @iqai, use CoinGecko MCP (see [token-prices.md](token-prices.md)).
 
@@ -250,20 +168,7 @@ Scores 700+ DeFi vaults across Morpho, Aave, Spark, Yearn, Beefy, Compound, and 
 Hosted endpoint (no install, no key):
 
 ```bash
-# Claude Code
 claude mcp add --transport http philidor https://mcp.philidor.io/api/mcp
-```
-
-```json
-// Claude Desktop
-{
-  "mcpServers": {
-    "philidor": {
-      "type": "streamable-http",
-      "url": "https://mcp.philidor.io/api/mcp"
-    }
-  }
-}
 ```
 
 ### Key Tools
@@ -284,22 +189,10 @@ claude mcp add --transport http philidor https://mcp.philidor.io/api/mcp
 ### Example: Assess Vault Risk After Bridging
 
 ```
-1. Find yield opportunities via DefiLlama:
-   Call mcp__defillama__get_pools
-   → Identify a high-APY vault on Arbitrum
-
-2. Check the vault's risk score:
-   Call mcp__philidor__get_vault_risk_breakdown:
-     network: "arbitrum"
-     address: "0xVaultAddress..."
-
-3. Compare with alternatives:
-   Call mcp__philidor__find_safest_vaults:
-     asset: "USDC"
-     chain: "arbitrum"
-
-4. If risk is acceptable → proceed to bridge via ../swap/SKILL.md.
-   If risk is high → suggest a safer vault or a different chain.
+1. Find yield via DefiLlama → get_pools → identify high-APY vault on Arbitrum
+2. Check risk → get_vault_risk_breakdown (network: "arbitrum", address: "0x...")
+3. Compare → find_safest_vaults (asset: "USDC", chain: "arbitrum")
+4. If acceptable → bridge via ../swap/SKILL.md. If high → suggest safer vault.
 ```
 
 ---
@@ -313,20 +206,7 @@ DeFi LP management and lending protocol with tools for pool analytics, LP strate
 Hosted endpoint (no install, no key):
 
 ```bash
-# Claude Code
 claude mcp add --transport http arcadia https://mcp.arcadia.finance/mcp
-```
-
-```json
-// Claude Desktop
-{
-  "mcpServers": {
-    "arcadia": {
-      "type": "streamable-http",
-      "url": "https://mcp.arcadia.finance/mcp"
-    }
-  }
-}
 ```
 
 ### Key Tools (Read — Analytics)
@@ -345,44 +225,13 @@ claude mcp add --transport http arcadia https://mcp.arcadia.finance/mcp
 
 ### Key Tools (Write — Position Management)
 
-| Tool | Parameters (\* = required) | Description |
-|------|-----------|-------------|
-| `write_account_deposit` | `account_address`\*, `asset_addresses`\*, `asset_amounts`\*, `chain_id` | Build deposit tx (collateral) |
-| `write_account_withdraw` | `account_address`\*, `asset_addresses`\*, `asset_amounts`\*, `chain_id` | Build withdrawal tx |
-| `write_account_borrow` | `pool_address`\*, `account_address`\*, `amount`\*, `to`\*, `chain_id` | Build borrow tx |
-| `write_account_add_liquidity` | `account_address`\*, `wallet_address`\*, `positions`\*, `chain_id` | Flash-action: deposit + LP in one tx |
-| `write_account_swap` | `account_address`\*, `asset_from`\*, `asset_to`\*, `amount_in`\*, `chain_id` | Flash-action: swap within account |
+Tools for building transactions: `write_account_deposit`, `write_account_withdraw`, `write_account_borrow`, `write_account_add_liquidity` (flash-action: deposit + LP in one tx), `write_account_swap` (flash-action: swap within account). All require `account_address`\* and `chain_id`.
 
 ### Example: Evaluate LP Strategies Before Bridging
 
 ```
-1. List featured LP strategies on the destination chain:
-   Call mcp__arcadia__read_strategy_list:
-     featured_only: true
-     chain_id: 8453
-
-2. Get detail for the top strategy:
-   Call mcp__arcadia__read_strategy_info:
-     strategy_id: <id from step 1>
-
-3. Check lending pool rates:
-   Call mcp__arcadia__read_pool_list:
-     chain_id: 8453
-
-4. Compare APY vs risk → advise user on best deployment
-   after bridging via ../swap/SKILL.md.
+1. List featured strategies → read_strategy_list (featured_only: true, chain_id: 8453)
+2. Get detail → read_strategy_info (strategy_id from step 1)
+3. Check lending rates → read_pool_list (chain_id: 8453)
+4. Compare APY vs risk → advise on best deployment after bridging.
 ```
-
----
-
-## Data Coverage
-
-DefiLlama tracks 5,000+ protocols across 250+ chains. Data categories:
-
-| Category | Coverage |
-|----------|----------|
-| TVL | All tracked protocols and chains |
-| DEX volume | Major DEXes (Uniswap, Curve, PancakeSwap, etc.) |
-| Fees/Revenue | Protocols that report fee data |
-| Yields | 10,000+ yield pools across DeFi |
-| Stablecoins | 100+ stablecoins with historical market cap data |

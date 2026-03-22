@@ -220,7 +220,3 @@ All scripts support `--json` for machine-readable output and `--rpc <url>` to ov
 | Insufficient liquidity       | Pool too small for amount          | Reduce amount or try a different pair        |
 | Destination chain unsupported| Wrong chain ID format              | Use deBridge chain IDs from ../common/chain-config.md |
 
-## References
-
-- [preflight.md](preflight.md) — Balance, allowance, gas, and slippage validation
-- [monitoring.md](monitoring.md) — Order status polling and fulfillment tracking

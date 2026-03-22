@@ -9,20 +9,20 @@
 - [debridge-common](skills/common/SKILL.md): Shared prerequisite for all deBridge agent skills.
 - [debridge-analytics](skills/analytics/SKILL.md): Query DeFi analytics and on-chain data from third-party MCP servers to make informed bridging and swapping decisions.
 - [debridge-signing](skills/signing/SKILL.md): Sign and broadcast deBridge transactions.
-- [debridge-swap](skills/swap/SKILL.md): Execute token swaps and cross-chain transfers via deBridge DLN.
+- [debridge-swap](skills/swap/SKILL.md): Execute token swaps, bridges, and cross-chain transfers via deBridge DLN.
 - [debridge-wallets](skills/wallets/SKILL.md): Set up a wallet for deBridge transactions.
 
 ## Optional
 
+- [MCP Server Configuration by Environment](skills/common/mcp-setup.md)
 - [Supported Chains and Token Configuration](skills/common/chain-config.md)
 - [RPC Endpoint Discovery via Chainlist](skills/common/rpc-discovery.md)
-- [MCP Server Configuration by Environment](skills/common/mcp-setup.md)
+- [MCP Tool Calls via CLI (mcpc)](skills/common/mcpc-usage.md)
+- [Skill Freshness Check](skills/common/skill-freshness.md)
 - [Token Prices and Market Data](skills/analytics/token-prices.md)
-- [On-Chain Explorer — Address, Transaction, Contract Lookup](skills/analytics/onchain-explorer.md)
-- [DeFi Protocol Analytics — TVL, Fees, Yields](skills/analytics/defi-tvl.md)
+- [On-Chain Explorer — Address, Transaction, Contract, Portfolio](skills/analytics/onchain-explorer.md)
+- [DeFi Protocol Analytics — TVL, Fees, Yields, Vault Risk](skills/analytics/defi-tvl.md)
 - [DEX Pool Analytics — Liquidity, OHLCV, Trades](skills/analytics/dex-pools.md)
-- [Subgraph Queries via The Graph](skills/analytics/subgraph-queries.md)
-- [Multi-Chain Wallet and Token Data](skills/analytics/multi-chain-data.md)
 - [Balance Queries with ethers.js and viem](skills/analytics/balance-ethers.md)
 - [Balance Queries with Foundry Cast](skills/analytics/balance-cast.md)
 - [Balance Queries with Python web3.py](skills/analytics/balance-web3py.md)
@@ -33,5 +33,4 @@
 - [Signing via Privy MCP](skills/signing/privy-mcp.md)
 - [Preflight Checks](skills/swap/preflight.md)
 - [Order Monitoring and Fulfillment Tracking](skills/swap/monitoring.md)
-- [SDK Fallback (Not Yet Available)](skills/swap/sdk-fallback.md)
 - [Privy Embedded Wallet Setup](skills/wallets/privy-embedded.md)

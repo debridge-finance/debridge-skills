@@ -9,11 +9,10 @@ description: >
   pool liquidity (DexPaprika). All servers are free and require no API
   key. Use this skill whenever the user asks about token prices, wallet
   balances, portfolio overview, transaction history, protocol TVL, DEX
-  liquidity, yield opportunities, orderbook depth, vault risk, token
-  security, or on-chain data. Also use for: "what's the price of ETH",
-  "check my balance", "show me the TVL of Aave", "is there enough
-  liquidity to swap", "look up this transaction", "is this token safe",
-  "what's the risk of this vault".
+  liquidity, yield opportunities, orderbook depth, vault risk, or
+  on-chain data. Also use for: "what's the price of ETH", "check my
+  balance", "show me the TVL of Aave", "is there enough liquidity to
+  swap", "look up this transaction", "what's the risk of this vault".
 license: MIT
 metadata:
   author: deBridge
@@ -28,7 +27,7 @@ Third-party MCP servers provide analytics data useful before, during, and after 
 
 ## Quick Reference
 
-| Want to...                              | MCP                          | Reference                                          |
+| Want to...                              | MCP                          | Go to                                              |
 |-----------------------------------------|------------------------------|----------------------------------------------------|
 | Get token prices and market data        | CoinGecko, Crypto.com        | [token-prices.md](token-prices.md)                 |
 | Look up address, tx, or contract        | Blockscout, Hive             | [onchain-explorer.md](onchain-explorer.md)         |
@@ -36,7 +35,6 @@ Third-party MCP servers provide analytics data useful before, during, and after 
 | Analyze DEX pools, OHLCV, trades        | DexPaprika                   | [dex-pools.md](dex-pools.md)                       |
 | Assess DeFi vault risk                  | Philidor                     | [defi-tvl.md](defi-tvl.md)                         |
 | Cross-chain swap quotes and volume      | SODAX                        | See sodax endpoint below                           |
-| Token security / rug pull check         | Hive                         | [onchain-explorer.md](onchain-explorer.md)         |
 | Query balances directly (no MCP)        | ethers, viem, cast, web3     | Direct Balance Queries below                       |
 
 ---
@@ -199,12 +197,3 @@ For a quick start with zero setup, CoinGecko (hosted, no API key), Crypto.com (h
 | `npx` hangs on first run      | Large package download        | Use `npm install -g` for persistent use                   |
 | Chain not supported            | MCP doesn't cover that chain  | Check chain support in each reference file                |
 
-## References
-
-- [token-prices.md](token-prices.md) — Token prices and market data (CoinGecko)
-- [onchain-explorer.md](onchain-explorer.md) — On-chain address, transaction, contract lookup (Blockscout)
-- [defi-tvl.md](defi-tvl.md) — Protocol TVL, fees, revenue, yields (DefiLlama)
-- [dex-pools.md](dex-pools.md) — DEX pool analytics, OHLCV, trades (DexPaprika)
-- [balance-ethers.md](balance-ethers.md) — Direct balance queries with ethers.js / viem
-- [balance-cast.md](balance-cast.md) — Direct balance queries with Foundry cast
-- [balance-web3py.md](balance-web3py.md) — Direct balance queries with Python web3.py

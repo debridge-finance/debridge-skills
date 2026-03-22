@@ -18,27 +18,10 @@ CoinGecko covers 15,000+ coins across 200+ networks including on-chain DEX data 
 Hosted endpoint (no install, no key):
 
 ```bash
-# Claude Code
 claude mcp add --transport http coingecko https://mcp.api.coingecko.com/mcp
 ```
 
-```json
-// Claude Desktop
-{
-  "mcpServers": {
-    "coingecko": {
-      "type": "streamable-http",
-      "url": "https://mcp.api.coingecko.com/mcp"
-    }
-  }
-}
-```
-
-Local (one-shot):
-
-```bash
-npx -y @coingecko/coingecko-mcp
-```
+Local (one-shot): `npx -y @coingecko/coingecko-mcp`
 
 ### Key Tools
 
@@ -89,20 +72,7 @@ Real-time exchange data from Crypto.com: orderbooks, recent trades, and OHLCV ca
 Hosted endpoint (no install, no key):
 
 ```bash
-# Claude Code
 claude mcp add --transport http cryptocom https://mcp.crypto.com/market-data/mcp
-```
-
-```json
-// Claude Desktop
-{
-  "mcpServers": {
-    "cryptocom": {
-      "type": "streamable-http",
-      "url": "https://mcp.crypto.com/market-data/mcp"
-    }
-  }
-}
 ```
 
 ### Key Tools
@@ -146,24 +116,10 @@ Real-time prices, market analysis with exchange volume distribution, and histori
 ### Installation
 
 ```bash
-# One-shot
-npx -y mcp-crypto-price
-
-# Claude Code
 claude mcp add crypto-price -- npx -y mcp-crypto-price
 ```
 
-```json
-// Claude Desktop
-{
-  "mcpServers": {
-    "crypto-price": {
-      "command": "npx",
-      "args": ["-y", "mcp-crypto-price"]
-    }
-  }
-}
-```
+One-shot: `npx -y mcp-crypto-price`
 
 ### Key Tools
 

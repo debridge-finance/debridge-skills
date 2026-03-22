@@ -16,7 +16,7 @@ metadata:
   version: "0.1.0"
 ---
 
-# deBridge Common — Environment Discovery
+# Environment Discovery
 
 ## Quick Reference
 

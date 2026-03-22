@@ -2,7 +2,7 @@
 title: On-Chain Explorer — Address, Transaction, Contract, Portfolio
 impact: HIGH
 impactDescription: "Verify transactions and inspect addresses after bridge/swap operations"
-tags: blockscout, hive, explorer, transactions, address, contract, abi, ens, portfolio, security
+tags: blockscout, hive, explorer, transactions, address, contract, abi, ens, portfolio
 ---
 
 # On-Chain Explorer
@@ -18,26 +18,7 @@ Official hosted MCP covering 3,000+ EVM-compatible chains. No installation or AP
 Hosted endpoint (recommended):
 
 ```bash
-# Claude Code
 claude mcp add --transport http blockscout https://mcp.blockscout.com/mcp
-```
-
-```json
-// Claude Desktop
-{
-  "mcpServers": {
-    "blockscout": {
-      "type": "streamable-http",
-      "url": "https://mcp.blockscout.com/mcp"
-    }
-  }
-}
-```
-
-Local via Docker (optional):
-
-```bash
-docker run --rm -i ghcr.io/blockscout/mcp-server:latest
 ```
 
 ### Key Tools
@@ -108,15 +89,14 @@ Returns: contract address, name, decimals, total supply.
 
 ## Hive Intelligence (Multi-Chain Analytics — No API Key, Hosted)
 
-320+ tools across 10 sub-servers covering market data, DeFi, DEX, portfolios, tokens, NFTs, security, sentiment, network infra, and search. Each sub-server exposes tools directly — no meta-tool indirection needed.
+300+ tools across 9 sub-servers covering market data, DeFi, DEX, portfolios, tokens, NFTs, sentiment, network infra, and search. Each sub-server exposes tools directly — no meta-tool indirection needed.
 
 ### Installation
 
 Connect to individual sub-servers by category. Each is a separate hosted endpoint:
 
 ```bash
-# Claude Code — add the sub-servers you need
-claude mcp add --transport http hive-security https://mcp.hiveintelligence.xyz/hive_security_risk/mcp
+# Add the sub-servers you need
 claude mcp add --transport http hive-portfolio https://mcp.hiveintelligence.xyz/hive_portfolio_wallet/mcp
 claude mcp add --transport http hive-tokens https://mcp.hiveintelligence.xyz/hive_token_contract/mcp
 claude mcp add --transport http hive-defi https://mcp.hiveintelligence.xyz/hive_defi_protocol/mcp
@@ -124,27 +104,10 @@ claude mcp add --transport http hive-dex https://mcp.hiveintelligence.xyz/hive_o
 claude mcp add --transport http hive-market https://mcp.hiveintelligence.xyz/hive_market_data/mcp
 ```
 
-```json
-// Claude Desktop — example with security + portfolio
-{
-  "mcpServers": {
-    "hive-security": {
-      "type": "streamable-http",
-      "url": "https://mcp.hiveintelligence.xyz/hive_security_risk/mcp"
-    },
-    "hive-portfolio": {
-      "type": "streamable-http",
-      "url": "https://mcp.hiveintelligence.xyz/hive_portfolio_wallet/mcp"
-    }
-  }
-}
-```
-
 ### Sub-Server Catalog
 
 | Sub-Server | Endpoint | Tools | Focus |
 |------------|----------|-------|-------|
-| Security & Risk | `mcp.hiveintelligence.xyz/hive_security_risk/mcp` | 20 | Token security, rug pull detection, malicious address check, approval security, phishing |
 | Portfolio & Wallet | `mcp.hiveintelligence.xyz/hive_portfolio_wallet/mcp` | 38 | Wallet balances, token holdings, DeFi positions, transaction history across chains |
 | Token & Contract | `mcp.hiveintelligence.xyz/hive_token_contract/mcp` | 27 | Token info, top holders, holder charts, token filtering, contract details |
 | DeFi Protocol | `mcp.hiveintelligence.xyz/hive_defi_protocol/mcp` | 23 | Protocol TVL, fees, yields, global DeFi stats |
@@ -156,18 +119,6 @@ claude mcp add --transport http hive-market https://mcp.hiveintelligence.xyz/hiv
 | Search & Discovery | `mcp.hiveintelligence.xyz/hive_search_discovery/mcp` | 10 | Search tokens/protocols, trending, categories, new coins |
 
 ### Key Tools by Use Case
-
-**Token Security (hive_security_risk):**
-
-| Tool | Parameters (* = required) | Description |
-|------|-----------|-------------|
-| `get_token_security` | `chainId`*, `contract_addresses`* | Token security analysis (honeypot, tax, owner privileges) |
-| `get_nft_security` | `chainId`*, `contract_addresses`* | NFT contract security check |
-| `check_malicious_address` | `address`* | Check if address is flagged as malicious |
-| `check_approval_security` | `chainId`*, `contract_addresses`* | Approval risk analysis for a contract |
-| `get_wallet_approvals` | `chainId`*, `address`* | List all token approvals for a wallet |
-| `check_dapp_security` | `url`* | DApp security check |
-| `check_phishing_site` | `url`* | Phishing site detection |
 
 **Portfolio (hive_portfolio_wallet):**
 
@@ -185,21 +136,6 @@ claude mcp add --transport http hive-market https://mcp.hiveintelligence.xyz/hiv
 | `get_token_info` | `network`*, `address`* | Token metadata and on-chain info |
 | `get_token_top_holders` | `network`*, `address`* | Top token holders |
 | `get_token_details` | `networkId`*, `address`* | Detailed token information |
-
-### Example: Security Check Before Swap
-
-```
-1. Check if the destination token is safe:
-   Call mcp__hive_security__get_token_security:
-     chainId: "1"
-     contract_addresses: "0xTokenAddress..."
-
-2. Review: is_honeypot, buy_tax, sell_tax, owner_change_balance,
-   can_take_back_ownership, is_open_source
-
-3. If flagged → warn user and suggest alternatives.
-   If clean → proceed to ../swap/SKILL.md.
-```
 
 ### Example: Portfolio Overview Before Bridge
 
@@ -226,7 +162,6 @@ claude mcp add --transport http hive-market https://mcp.hiveintelligence.xyz/hiv
 | Token holdings for an address | Blockscout | `get_tokens_by_address` |
 | Transfer history by time range | Blockscout | `get_transactions_by_address` |
 | Block details | Blockscout | `get_block_info` |
-| Token security / rug pull check | Hive (hive-security) | `get_token_security` |
 | Multi-chain portfolio overview | Hive (hive-portfolio) | `get_wallet_token_balances` |
 | Social sentiment analysis | Hive (hive-sentiment) | Connect `hive_social_sentiment` sub-server |
 | NFT analytics | Hive (hive-nft) | Connect `hive_nft_analytics` sub-server |
