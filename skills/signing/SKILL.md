@@ -34,7 +34,7 @@ PREREQUISITE: Read ../common/SKILL.md for environment detection, auth, and chain
 
 ## What Needs Signing
 
-deBridge transactions from `mcp__debridge__create_tx` require two signing operations:
+deBridge transactions from `mcp__debridge__create_tx` (cross-chain) or `mcp__debridge__estimate_same_chain_swap` (same-chain) return up to two transaction objects to sign:
 
 1. **Token approval tx** (if allowance insufficient) — a standard EVM transaction calling `approve()` on the token contract.
 2. **Bridge/swap tx** — an EVM transaction that may include EIP-712 typed data for DLN order creation.
@@ -68,7 +68,7 @@ When Signer = `env-privkey`, a private key exists but a signing library is still
 
 ## Transaction Flow
 
-After `mcp__debridge__create_tx` returns tx data:
+After `mcp__debridge__create_tx` or `mcp__debridge__estimate_same_chain_swap` returns tx data:
 
 ### Step 1: Check for Approval
 
@@ -84,9 +84,9 @@ If the response includes an approval transaction (`approveTx`):
 3. Broadcast to the source chain RPC.
 4. Record the transaction hash.
 
-### Step 3: Hand Off to Monitoring
+### Step 3: Hand Off to Monitoring (cross-chain only)
 
-After broadcast, pass the tx hash to ../swap/SKILL.md monitoring section for order tracking.
+For cross-chain bridges, pass the tx hash and order ID to ../swap/monitoring.md for order tracking. Same-chain swaps settle in a single transaction — no monitoring needed.
 
 ## RPC Endpoints
 

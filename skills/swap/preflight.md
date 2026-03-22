@@ -51,10 +51,10 @@ Check if the deBridge contract is approved to spend the token:
 cast call "$TOKEN_ADDRESS" "allowance(address,address)" "$WALLET_ADDRESS" "$SPENDER_ADDRESS" --rpc-url "$RPC_URL"
 ```
 
-The `$SPENDER_ADDRESS` is the `tx.to` field from the `create_tx` response.
+The `$SPENDER_ADDRESS` is the `tx.to` field from the `create_tx` or `estimate_same_chain_swap` response.
 
 If allowance < required amount:
-- The `create_tx` response should include an `approveTx` object.
+- The response should include an `approveTx` object.
 - Send the approval transaction first (see ../signing/SKILL.md).
 - Wait for 1 confirmation before proceeding.
 
@@ -100,6 +100,6 @@ The `../common/scripts/` directory has TypeScript helpers that automate these ch
 
 | Script | Preflight use | Example |
 |--------|--------------|---------|
-| `balance.ts` | Check token or native balance | `npx tsx balance.ts 0xAddr 42161 --token 0xUSDC` |
-| `allowance.ts` | Check ERC-20 allowance | `npx tsx allowance.ts 0xUSDC 0xOwner 0xSpender 42161 --check 1000000000` |
-| `approve.ts` | Send approval tx | `npx tsx approve.ts 0xUSDC 0xSpender 42161 --amount 1000000000` |
+| `balance.ts` | Check token or native balance | `npx tsx ../common/scripts/balance.ts 0xAddr 42161 --token 0xUSDC` |
+| `allowance.ts` | Check ERC-20 allowance | `npx tsx ../common/scripts/allowance.ts 0xUSDC 0xOwner 0xSpender 42161 --check 1000000000` |
+| `approve.ts` | Send approval tx | `npx tsx ../common/scripts/approve.ts 0xUSDC 0xSpender 42161 --amount 1000000000` |

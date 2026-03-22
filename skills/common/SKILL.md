@@ -24,7 +24,7 @@ metadata:
 |-------------------------------|------------------------------------------|
 | Detect environment type       | Phase 1 below                            |
 | Refresh skills to latest      | Skill Freshness Check below              |
-| Connect to deBridge MCP       | Phase 2 below + [mcp-setup.md]           |
+| Connect to deBridge MCP       | Phase 2 below + [mcp-setup.md](mcp-setup.md) |
 | Identify available signers    | Phase 3 below                            |
 | Look up chain IDs and tokens  | [chain-config.md](chain-config.md)       |
 | Discover RPC endpoints        | [rpc-discovery.md](rpc-discovery.md)     |
@@ -39,7 +39,7 @@ After completing all three phases, record:
 
 ```
 Environment: <CLI | MCP Desktop | Browser | Headless | Chat-only>
-Access:      <streaming-mcp | stdio-mcp | sdk | cli | manual>
+Access:      <streaming-mcp | stdio-mcp | mcpc | manual>
 Signer:      <env-privkey | foundry-cast | browser-wallet | ethers-viem | web3py | mcp-wallet | none>
 ```
 

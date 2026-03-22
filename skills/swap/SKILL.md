@@ -111,15 +111,18 @@ Same-chain swaps settle in a single transaction. No monitoring step needed — t
 
 Cross-chain swaps (also called bridges or cross-chain transfers) move tokens between different blockchains.
 
-### Solana Destinations
+### Non-EVM Destinations
 
-When the destination chain is Solana (deBridge chain ID `7565164`):
+**Solana** (deBridge chain ID `7565164`):
 - Recipient addresses are base58 (e.g., `Gh9ZwEm...`), not hex — validate format before calling `create_tx`.
-- No approval transaction is needed on Solana — skip the `approveTx` step on the destination side.
 - Native token (SOL) address: `11111111111111111111111111111111` (32 ones).
 - Token amounts still use raw units but SOL has 9 decimals, not 18.
 
-The source side (EVM) still follows the normal EVM flow: approval if needed, then sign and send.
+**Tron** (deBridge chain ID `100000026`):
+- Recipient addresses are base58check (e.g., `T9yD14N...`), starting with `T` — not the same encoding as Solana.
+- Native token (TRX) has 6 decimals.
+
+For both: the source side (EVM) follows the normal EVM flow — approval if needed on the source chain, then sign and send. The `approveTx` from `create_tx` is always a source-chain operation.
 
 ### Step 1: Resolve Tokens
 
@@ -196,11 +199,11 @@ The `../common/scripts/` directory has TypeScript helpers that handle amount con
 
 | Script | Purpose | Example |
 |--------|---------|---------|
-| `convert-amount.ts` | Convert human ↔ raw units | `npx tsx convert-amount.ts 100 0xA0b8...eB48 1` |
-| `balance.ts` | Query native or ERC-20 balance | `npx tsx balance.ts 0xAddr 42161 --token 0xToken` |
-| `allowance.ts` | Check ERC-20 allowance | `npx tsx allowance.ts 0xToken 0xOwner 0xSpender 1 --check 100` |
-| `approve.ts` | Send ERC-20 approval tx | `npx tsx approve.ts 0xToken 0xSpender 1 --amount 1000` |
-| `rpc.ts` | Discover RPC from Chainlist | `npx tsx rpc.ts 42161 --json` |
+| `convert-amount.ts` | Convert human ↔ raw units | `npx tsx ../common/scripts/convert-amount.ts 100 0xA0b8...eB48 1` |
+| `balance.ts` | Query native or ERC-20 balance | `npx tsx ../common/scripts/balance.ts 0xAddr 42161 --token 0xToken` |
+| `allowance.ts` | Check ERC-20 allowance | `npx tsx ../common/scripts/allowance.ts 0xToken 0xOwner 0xSpender 1 --check 100` |
+| `approve.ts` | Send ERC-20 approval tx | `npx tsx ../common/scripts/approve.ts 0xToken 0xSpender 1 --amount 1000` |
+| `rpc.ts` | Discover RPC from Chainlist | `npx tsx ../common/scripts/rpc.ts 42161 --json` |
 
 All scripts support `--json` for machine-readable output and `--rpc <url>` to override RPC discovery.
 
