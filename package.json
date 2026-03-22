@@ -1,0 +1,21 @@
+{
+  "name": "debridge-skills",
+  "private": true,
+  "version": "0.1.0",
+  "description": "deBridge cross-chain DeFi agent skills",
+  "scripts": {
+    "validate": "npx tsx scripts/validate.ts",
+    "validate:verbose": "npx tsx scripts/validate.ts --verbose",
+    "build:index": "npx tsx scripts/build-index.ts",
+    "build:llmstxt": "npx tsx scripts/generate-llmstxt.ts",
+    "build": "npm run validate && npm run build:index && npm run build:llmstxt",
+    "check": "npx tsx scripts/build-index.ts --check && npx tsx scripts/generate-llmstxt.ts --check"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "tsx": "^4.21.0"
+  },
+  "dependencies": {
+    "ethers": "^6.16.0"
+  }
+}

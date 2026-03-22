@@ -1,0 +1,206 @@
+{
+  "skill_name": "debridge",
+  "evals": [
+    {
+      "id": 1,
+      "skill": "debridge-swap",
+      "prompt": "Bridge 50 USDC from Ethereum to Arbitrum to 0xABC1234567890abcdef1234567890abcdef123456",
+      "expected_output": "Agent resolves USDC on both chains via search_tokens, calls create_tx with correct params, runs preflight checks, routes to signing, and sets up monitoring.",
+      "files": [],
+      "expectations": [
+        "Calls or references mcp__debridge__search_tokens for USDC on Ethereum (chainId 1)",
+        "Calls or references mcp__debridge__search_tokens for USDC on Arbitrum (chainId 42161)",
+        "Calls or references mcp__debridge__create_tx with srcChainId, dstChainId, token addresses, amount in raw units, and recipient",
+        "Converts 50 USDC to raw units (50000000) using 6 decimals",
+        "References or performs preflight checks (balance, allowance, gas) before signing",
+        "References signing/SKILL.md or a specific signer file for transaction signing",
+        "Mentions monitoring or order tracking after execution"
+      ]
+    },
+    {
+      "id": 2,
+      "skill": "debridge-swap",
+      "prompt": "I want to move some ETH from Arbitrum to Solana, maybe like 0.5 ETH",
+      "expected_output": "Agent handles native token (zero address for ETH), cross-ecosystem bridge (EVM to Solana), and converts 0.5 ETH to raw units (500000000000000000).",
+      "files": [],
+      "expectations": [
+        "Uses or references the zero address (0x0000...0000 or native token address) for ETH on Arbitrum",
+        "Identifies Solana as a supported destination and uses the correct deBridge chain ID for Solana (7565164)",
+        "Converts 0.5 ETH to raw units using 18 decimals",
+        "Calls or references mcp__debridge__create_tx",
+        "References preflight checks before signing",
+        "Asks for or handles Solana recipient address (different format from EVM)"
+      ]
+    },
+    {
+      "id": 3,
+      "skill": "debridge-swap",
+      "prompt": "bridge tokens",
+      "expected_output": "Agent asks clarifying questions rather than guessing: source chain, destination chain, token, amount, and recipient address.",
+      "files": [],
+      "expectations": [
+        "Asks which token to bridge (or source token)",
+        "Asks for source chain or destination chain",
+        "Asks for amount",
+        "Asks for recipient address",
+        "Does NOT call create_tx without having all required parameters"
+      ]
+    },
+    {
+      "id": 4,
+      "skill": "debridge-swap",
+      "prompt": "Swap 1000 USDC for ETH on Arbitrum",
+      "expected_output": "Agent identifies this as a same-chain swap, resolves both tokens on Arbitrum, calls estimate_same_chain_swap, runs preflight, and routes to signing.",
+      "files": [],
+      "expectations": [
+        "Identifies this as a same-chain swap (source and destination on the same chain)",
+        "Calls or references mcp__debridge__search_tokens for USDC on Arbitrum",
+        "Calls or references mcp__debridge__search_tokens for ETH on Arbitrum",
+        "Calls or references mcp__debridge__estimate_same_chain_swap (not create_tx)",
+        "Converts 1000 USDC to raw units (1000000000) using 6 decimals",
+        "References preflight checks before signing",
+        "Mentions that same-chain swaps settle in a single transaction (no monitoring needed)"
+      ]
+    },
+    {
+      "id": 5,
+      "skill": "debridge-swap",
+      "prompt": "I want to trade my USDT on Ethereum for USDC on Polygon",
+      "expected_output": "Agent recognizes this as a cross-chain swap and routes to the bridge pipeline instead of same-chain swap.",
+      "files": [],
+      "expectations": [
+        "Identifies this as a cross-chain operation (Ethereum to Polygon are different chains)",
+        "Routes to the cross-chain swap flow or references create_tx",
+        "Does NOT use estimate_same_chain_swap for a cross-chain operation",
+        "Resolves USDT on Ethereum and USDC on Polygon",
+        "Calls or references mcp__debridge__create_tx for the cross-chain transfer"
+      ]
+    },
+    {
+      "id": 6,
+      "skill": "debridge-common",
+      "prompt": "I want to use deBridge, how do I get started?",
+      "expected_output": "Agent runs the three-phase detection sequence: environment detection, MCP connection setup, and signer detection.",
+      "files": [],
+      "expectations": [
+        "Detects or asks about the runtime environment (CLI, MCP Desktop, Browser, etc.)",
+        "Attempts to check MCP connectivity (references get_supported_chains or mcp__debridge__get_supported_chains)",
+        "Provides MCP setup instructions appropriate to the detected environment",
+        "Checks for available signers (private key, cast, ethers, etc.)"
+      ]
+    },
+    {
+      "id": 7,
+      "skill": "debridge-common",
+      "prompt": "Is Avalanche supported by deBridge? What about Base?",
+      "expected_output": "Agent checks chain support via get_supported_chains MCP tool and reports whether Avalanche and Base are in the list.",
+      "files": [],
+      "expectations": [
+        "Calls or references mcp__debridge__get_supported_chains to check chain support",
+        "Provides an answer about Avalanche support",
+        "Provides an answer about Base support",
+        "References chain IDs if the chains are supported"
+      ]
+    },
+    {
+      "id": 8,
+      "skill": "debridge-signing",
+      "prompt": "I have a deBridge transaction object from create_tx. How do I sign and send it? I have Foundry installed.",
+      "expected_output": "Agent routes to Foundry cast signing method and provides cast-specific instructions.",
+      "files": [],
+      "expectations": [
+        "Identifies Foundry cast as the signer based on user's statement",
+        "References or reads foundry-cast.md for signing instructions",
+        "Explains how to sign and broadcast with cast send",
+        "Mentions the --rpc-url flag or RPC endpoint requirement",
+        "Covers approval transaction flow if applicable (sign approval first, wait, then bridge tx)"
+      ]
+    },
+    {
+      "id": 9,
+      "skill": "debridge-signing",
+      "prompt": "I need to approve USDC and then send a bridge tx, I'm using ethers.js",
+      "expected_output": "Agent routes to ethers.js signer, explains approval-then-bridge sequence with proper ordering.",
+      "files": [],
+      "expectations": [
+        "Routes to sdk-signer.md or ethers.js signing instructions",
+        "Explains the two-step sequence: approve first, then bridge tx",
+        "Mentions waiting for approval confirmation (1 block) before sending bridge tx",
+        "Shows or references ethers.js code for signing transactions",
+        "Mentions the private key or wallet setup requirement"
+      ]
+    },
+    {
+      "id": 10,
+      "skill": "debridge-wallets",
+      "prompt": "I don't have a wallet set up and I want to bridge tokens. What should I do?",
+      "expected_output": "Agent detects no signer and presents wallet setup options appropriate to the environment.",
+      "files": [],
+      "expectations": [
+        "Presents multiple wallet setup options (private key, Foundry keystore, browser wallet, Privy)",
+        "Recommends an option based on detected or assumed environment",
+        "Includes instructions for generating a private key or creating a wallet",
+        "Warns about private key security (never commit to git, never log)",
+        "Mentions the need to fund the new wallet before bridging",
+        "Suggests re-running signer detection after setup"
+      ]
+    },
+    {
+      "id": 11,
+      "skill": "debridge-wallets",
+      "prompt": "Set up a Privy embedded wallet for my autonomous trading bot",
+      "expected_output": "Agent routes to Privy embedded wallet setup with full instructions for autonomous agent use.",
+      "files": [],
+      "expectations": [
+        "Routes to Privy embedded wallet option (Option 4 or privy-embedded.md)",
+        "Mentions Privy dashboard for getting App ID and App Secret",
+        "Explains that keys are secured in TEEs (server-side)",
+        "Mentions installing Privy MCP server alongside deBridge MCP",
+        "Explains the zero-UI signing flow (create_tx output goes directly to Privy eth_sendTransaction)",
+        "Mentions wallet creation via Privy MCP (create_wallet)"
+      ]
+    },
+    {
+      "id": 12,
+      "skill": "debridge-analytics",
+      "prompt": "What's the current price of ETH and how much USDC do I have across all my chains?",
+      "expected_output": "Agent routes to token price MCP (CoinGecko/Alchemy) for price and multi-chain data MCP (Moralis/Alchemy) for balances.",
+      "files": [],
+      "expectations": [
+        "Routes to token-prices.md or CoinGecko/Alchemy MCP for ETH price",
+        "Routes to multi-chain-data.md or Moralis/Alchemy MCP for cross-chain USDC balances",
+        "Identifies that two different data sources are needed (price vs balance)",
+        "Mentions API key requirements if applicable (Alchemy, Moralis need keys)",
+        "Offers direct balance query as fallback if no analytics MCP is available"
+      ]
+    },
+    {
+      "id": 13,
+      "skill": "debridge-analytics",
+      "prompt": "Check if there's enough liquidity on Uniswap v3 Arbitrum for a large USDC/ETH swap",
+      "expected_output": "Agent routes to subgraph queries via The Graph MCP to check Uniswap v3 pool liquidity on Arbitrum.",
+      "files": [],
+      "expectations": [
+        "Routes to subgraph-queries.md or The Graph MCP for protocol-specific data",
+        "Identifies Uniswap v3 as a subgraph query target",
+        "Mentions The Graph API key requirement",
+        "References querying pool liquidity data (TVL, tick liquidity, or similar)",
+        "May also reference dex-pools.md or DexPaprika as an alternative for pool data"
+      ]
+    },
+    {
+      "id": 14,
+      "skill": "debridge-analytics",
+      "prompt": "Look up transaction 0xabc123def456789abc123def456789abc123def456789abc123def456789abcd on Polygon and tell me if it succeeded",
+      "expected_output": "Agent routes to on-chain explorer (Blockscout or Alchemy) to look up transaction details on Polygon.",
+      "files": [],
+      "expectations": [
+        "Routes to onchain-explorer.md or Blockscout/Alchemy MCP for transaction lookup",
+        "Identifies Polygon as the chain to query",
+        "References the transaction hash provided by the user",
+        "Mentions checking transaction status (success/failure) and receipt details",
+        "Blockscout is preferred as primary (no API key needed)"
+      ]
+    }
+  ]
+}

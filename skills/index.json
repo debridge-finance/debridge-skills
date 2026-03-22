@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "name": "debridge",
+  "description": "deBridge cross-chain DeFi agent skills — bridge, swap, sign, and monitor across 20+ chains.",
+  "homepage": "https://agents.debridge.com",
+  "skills": [
+    {
+      "name": "debridge-common",
+      "description": "Shared prerequisite for all deBridge agent skills. Detects agent runtime environment (CLI, MCP Desktop, browser, headless, chat-only), selects deBridge access method (streaming MCP, stdio MCP, SDK, CLI), and identifies available transaction signers. Run this first before any deBridge operation. Use whenever the user mentions deBridge for the first time in a session, asks about supported chains, needs to connect to deBridge MCP, or wants to check what signing methods are available. Also use when troubleshooting deBridge connectivity, checking environment capabilities, or setting up RPC endpoints.",
+      "entry_point": "skills/common/SKILL.md",
+      "references": [
+        "skills/common/chain-config.md",
+        "skills/common/mcp-setup.md",
+        "skills/common/rpc-discovery.md",
+        "skills/common/skill-freshness.md",
+        "skills/common/mcpc-usage.md"
+      ]
+    },
+    {
+      "name": "debridge-analytics",
+      "description": "Query DeFi analytics and on-chain data from third-party MCP servers to make informed bridging and swapping decisions. Covers token prices (CoinGecko, Alchemy), on-chain lookups (Blockscout), protocol TVL and yields (DefiLlama), DEX pool liquidity (DexPaprika), subgraph queries (The Graph), and multi-chain wallet data (Moralis, Alchemy). Use this skill whenever the user asks about token prices, wallet balances, portfolio overview, transaction history, protocol TVL, DEX liquidity, yield opportunities, or on-chain data. Also use for: \"what's the price of ETH\", \"check my balance\", \"how much USDC do I have across chains\", \"show me the TVL of Aave\", \"is there enough liquidity to swap\", \"look up this transaction\", \"query the Uniswap subgraph\".",
+      "entry_point": "skills/analytics/SKILL.md",
+      "references": [
+        "skills/analytics/balance-cast.md",
+        "skills/analytics/balance-ethers.md",
+        "skills/analytics/balance-web3py.md",
+        "skills/analytics/defi-tvl.md",
+        "skills/analytics/dex-pools.md",
+        "skills/analytics/multi-chain-data.md",
+        "skills/analytics/onchain-explorer.md",
+        "skills/analytics/subgraph-queries.md",
+        "skills/analytics/token-prices.md"
+      ]
+    },
+    {
+      "name": "debridge-signing",
+      "description": "Sign and broadcast deBridge transactions. Routes to the correct signing method based on the detected signer: private key with ethers/viem, Foundry cast, browser wallet (MetaMask), web3.py, or Privy embedded wallet. Use this skill whenever a deBridge transaction needs to be signed and sent on-chain — including bridge transactions, swap transactions, and token approvals. Also use when the user asks \"how do I sign this transaction\", \"send the transaction\", \"approve the token\", \"broadcast to chain\", or needs help with EIP-712 typed data signing. This skill is called automatically by the bridge and swap workflows, but can also be used standalone for signing guidance.",
+      "entry_point": "skills/signing/SKILL.md",
+      "references": [
+        "skills/signing/foundry-cast.md",
+        "skills/signing/metamask.md",
+        "skills/signing/privy-mcp.md",
+        "skills/signing/sdk-signer.md",
+        "skills/signing/web3py.md"
+      ]
+    },
+    {
+      "name": "debridge-swap",
+      "description": "Execute token swaps, bridges, and cross-chain transfers via deBridge DLN. Use this skill whenever the user wants to move, send, swap, exchange, trade, convert, or bridge tokens — whether on the same chain or across different chains (EVM-to-EVM, EVM-to-Solana, any L2-to-L2). This skill handles the full lifecycle: token lookup, quoting, amount conversion, balance checks, transaction signing, execution, and order tracking. IMPORTANT: Trigger this skill even for casual or indirect requests about moving tokens between wallets or chains. Common patterns include: \"swap X for Y\", \"bridge tokens from A to B\", \"move my USDC to Base\", \"send ETH to Solana\", \"trade BNB for USDT on BSC\", \"how much to bridge from Polygon to Optimism\", \"convert DAI to USDC on Arbitrum\", \"exchange my tokens\", \"transfer to a cheaper L2\", \"what's the rate for swapping\", \"get me a quote\", and any mention of moving crypto between chains or swapping one token for another. Also triggers for order monitoring: \"my order is stuck\", \"check DLN order status\", \"track my bridge transaction\", \"order stuck on Created\". If the user mentions specific token names (USDC, ETH, USDT, DAI, SOL, BNB, MATIC, AVAX) alongside any intent to move, send, swap, or trade them — use this skill.",
+      "entry_point": "skills/swap/SKILL.md",
+      "references": [
+        "skills/swap/monitoring.md",
+        "skills/swap/preflight.md"
+      ]
+    },
+    {
+      "name": "debridge-wallets",
+      "description": "Set up a wallet for deBridge transactions. Use when the user has no signer available, needs to create a new wallet, or wants to configure wallet access for an AI agent. Covers generating a private key, creating a Foundry keystore, installing a browser wallet (MetaMask), and setting up Privy embedded wallets for zero-UI autonomous agent trading. Use this skill when: the user says \"I don't have a wallet\", \"how do I set up a wallet\", \"create a new wallet\", \"generate an address\", \"I need a wallet for bridging\", \"set up Privy\", \"embedded wallet for my agent\", \"keystore setup\", or when common Phase 3 detected no signer. Also relevant for \"conversational trading setup\" and \"autonomous agent wallet\".",
+      "entry_point": "skills/wallets/SKILL.md",
+      "references": [
+        "skills/wallets/privy-embedded.md"
+      ]
+    }
+  ]
+}
