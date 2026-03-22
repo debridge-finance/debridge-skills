@@ -75,5 +75,5 @@ If the tool is not available, the standard `eth_sendTransaction` flow handles mo
 |-------|-----|
 | Privy MCP tool not found | Privy MCP not configured — read ../wallets/privy-embedded.md |
 | Insufficient funds | Fund Privy wallet with token + native gas on source chain |
-| Invalid chain_id | Use deBridge chain IDs from ../common/chain-config.md |
+| Invalid chain_id | Use standard EVM chain IDs (not deBridge internal IDs). For chains with deBridge-internal IDs (Sonic, Berachain, Neon, Gnosis, Mantle, Abstract), use the standard chain ID from the mapping table in ../common/chain-config.md |
 | App Secret invalid | Regenerate at [dashboard.privy.io](https://dashboard.privy.io) and reconfigure MCP |

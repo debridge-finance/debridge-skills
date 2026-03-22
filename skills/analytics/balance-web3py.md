@@ -54,6 +54,8 @@ print(f"{human_balance} {symbol}")
 
 ## Multi-Chain Balance Scan
 
+RPCs below are public fallback defaults. Prefer user-provided RPCs, environment variables, or ../common/rpc-discovery.md for programmatic discovery.
+
 ```python
 from web3 import Web3
 import concurrent.futures
@@ -70,6 +72,7 @@ CHAINS = [
     {"name": "Polygon",   "rpc": "https://polygon-bor-rpc.publicnode.com","symbol": "POL"},
     {"name": "BNB Chain", "rpc": "https://bsc-dataseed.binance.org",      "symbol": "BNB"},
     {"name": "Avalanche", "rpc": "https://api.avax.network/ext/bc/C/rpc", "symbol": "AVAX"},
+    {"name": "Linea",     "rpc": "https://rpc.linea.build",              "symbol": "ETH"},
 ]
 
 def get_balance(chain):

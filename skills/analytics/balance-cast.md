@@ -34,6 +34,8 @@ cast balance "$ADDRESS" --rpc-url "$RPC_URL"
 
 ### Multi-Chain Scan
 
+RPCs below are public fallback defaults. Prefer user-provided RPCs or environment variables, or use ../common/rpc-discovery.md for programmatic discovery.
+
 ```bash
 #!/usr/bin/env bash
 ADDRESS=$(cast wallet address --private-key "$PRIVATE_KEY")

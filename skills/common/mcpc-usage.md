@@ -11,7 +11,7 @@ Some environments have Node.js and shell access but cannot add MCP servers nativ
 
 ```bash
 # 1. Connect to an MCP server (creates a named session)
-npx -y @apify/mcpc connect agents.debridge.com/mcp @debridge
+npx -y @apify/mcpc https://agents.debridge.com/mcp connect @debridge
 
 # 2. List available tools
 npx -y @apify/mcpc @debridge tools-list
@@ -30,8 +30,13 @@ npx -y @apify/mcpc --json @debridge tools-call create_tx \
   dstChainTokenOutRecipient:=0xYourAddress
 
 # 4. Close session when done
-npx -y @apify/mcpc close @debridge
+npx -y @apify/mcpc @debridge close
 ```
+
+**CLI syntax:** `mcpc [options] <target> [command]` — the target (URL or `@session`) always comes **before** the command.
+
+- **Connect:** target is the URL, command is `connect @name` → `mcpc <url> connect @name`
+- **Call/list/close:** target is the session → `mcpc @name tools-call ...`, `mcpc @name close`
 
 Key details:
 - Arguments use `:=` syntax. Types are auto-detected: `count:=10` → number, `name:=hello` → string.

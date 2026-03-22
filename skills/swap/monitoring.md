@@ -78,3 +78,8 @@ Share this link with the user for visual tracking.
 | Order stuck on `Created`     | No taker picked up the order   | Wait — takers may need more time     |
 | Order `Cancelled`            | Expired or manually cancelled  | Re-create the bridge with `create_tx`|
 | Order not found (404)        | Not yet indexed                | Wait 30 seconds and retry            |
+
+## Post-Delivery Verification
+
+After an order reaches `ClaimedUnlock`, verify the balance on the destination chain using:
+- ../analytics/onchain-explorer.md — verify the transaction and token balances on the destination chain via Blockscout

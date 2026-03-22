@@ -20,7 +20,7 @@ Given tx data from `mcp__debridge__create_tx`:
 ### With private key from environment
 
 ```bash
-cast send "$TX_TO" "$TX_DATA" \
+cast send "$TX_TO" --data "$TX_DATA" \
   --value "$TX_VALUE" \
   --rpc-url "$RPC_URL" \
   --private-key "$PRIVATE_KEY" \
@@ -30,7 +30,7 @@ cast send "$TX_TO" "$TX_DATA" \
 ### With Foundry keystore
 
 ```bash
-cast send "$TX_TO" "$TX_DATA" \
+cast send "$TX_TO" --data "$TX_DATA" \
   --value "$TX_VALUE" \
   --rpc-url "$RPC_URL" \
   --account my-account \

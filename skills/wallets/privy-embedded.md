@@ -124,8 +124,8 @@ Privy MCP's `eth_sendTransaction` accepts the same format:
 
 ```json
 {
-  "to": "0xeF4fB24aD...",
-  "value": "0x...",
+  "to": "0xeF4fB24aD0916217251F553c0596F8Edc630EB66",
+  "value": "1000000000000000",
   "data": "0xb9303701...",
   "chain_id": 42161
 }

@@ -101,7 +101,7 @@ console.log(`${formatUnits(balance, decimals)} ${symbol}`);
 
 ## Multi-Chain Balance Scan
 
-Query native balance across multiple chains in parallel. Use RPC discovery from ../common/rpc-discovery.md or provide known RPCs.
+Query native balance across multiple chains in parallel. RPCs below are public fallback defaults — prefer user-provided RPCs, environment variables, or RPC discovery from ../common/rpc-discovery.md.
 
 ### ethers
 
@@ -115,6 +115,8 @@ const chains = [
   { name: "Optimism",  chainId: 10,    rpc: "https://mainnet.optimism.io",  symbol: "ETH"  },
   { name: "Polygon",   chainId: 137,   rpc: "https://polygon-bor-rpc.publicnode.com", symbol: "POL" },
   { name: "BNB Chain", chainId: 56,    rpc: "https://bsc-dataseed.binance.org",       symbol: "BNB" },
+  { name: "Avalanche", chainId: 43114, rpc: "https://api.avax.network/ext/bc/C/rpc",  symbol: "AVAX" },
+  { name: "Linea",    chainId: 59144, rpc: "https://rpc.linea.build",                 symbol: "ETH" },
 ];
 
 async function getBalance(chain: typeof chains[0], address: string) {
@@ -144,15 +146,17 @@ Key details:
 
 ```typescript
 import { createPublicClient, http, formatEther } from "viem";
-import { mainnet, arbitrum, base, optimism, polygon, bsc } from "viem/chains";
+import { mainnet, arbitrum, base, optimism, polygon, bsc, avalanche, linea } from "viem/chains";
 
 const chains = [
-  { chain: mainnet,  rpc: "https://eth.llamarpc.com" },
-  { chain: arbitrum, rpc: "https://arb1.arbitrum.io/rpc" },
-  { chain: base,     rpc: "https://mainnet.base.org" },
-  { chain: optimism, rpc: "https://mainnet.optimism.io" },
-  { chain: polygon,  rpc: "https://polygon-bor-rpc.publicnode.com" },
-  { chain: bsc,      rpc: "https://bsc-dataseed.binance.org" },
+  { chain: mainnet,   rpc: "https://eth.llamarpc.com" },
+  { chain: arbitrum,  rpc: "https://arb1.arbitrum.io/rpc" },
+  { chain: base,      rpc: "https://mainnet.base.org" },
+  { chain: optimism,  rpc: "https://mainnet.optimism.io" },
+  { chain: polygon,   rpc: "https://polygon-bor-rpc.publicnode.com" },
+  { chain: bsc,       rpc: "https://bsc-dataseed.binance.org" },
+  { chain: avalanche, rpc: "https://api.avax.network/ext/bc/C/rpc" },
+  { chain: linea,     rpc: "https://rpc.linea.build" },
 ];
 
 const results = await Promise.allSettled(

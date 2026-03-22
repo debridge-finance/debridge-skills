@@ -44,7 +44,9 @@ Some chains use deBridge-internal IDs that differ from standard EVM chain IDs. A
 | Neon      | 100000001   | 245022934         |
 | Gnosis    | 100000002   | 100               |
 | Sonic     | 100000014   | 146               |
+| Abstract  | 100000017   | 2741              |
 | Berachain | 100000020   | 80094             |
+| Mantle    | 100000023   | 5000              |
 
 ## Common Tokens
 

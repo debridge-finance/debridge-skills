@@ -40,30 +40,32 @@ No API key needed.
 
 ### Discovery
 
-| Tool | Parameters | Description |
+| Tool | Parameters (* = required) | Description |
 |------|-----------|-------------|
+| `getCapabilities` | — | Server capabilities, workflow patterns, network synonyms, common pitfalls |
 | `getNetworks` | — | All supported networks |
-| `search` | `query` | Search tokens, pools, DEXes by name/symbol/address |
+| `getNetworkDexes` | `network`*, `page`, `limit`, `sort`(asc/desc), `order_by`(pool) | DEXes on a specific network |
+| `search` | `query`* | Search tokens, pools, DEXes by name/symbol/address |
 | `getStats` | — | Aggregate DEX statistics |
 
 ### Pool Data
 
-| Tool | Parameters | Description |
+| Tool | Parameters (* = required) | Description |
 |------|-----------|-------------|
-| `getNetworkPools` | `network` | All pools on a network |
-| `getDexPools` | `network`, `dex` | Pools for a specific DEX |
-| `getNetworkPoolsFilter` | `network`, `volume_24h_min`, `created_after`, `sort_by`, `limit` | Filtered pool search |
-| `getPoolDetails` | `network`, `pool_address` | Full pool info: TVL, volume, fees |
-| `getPoolOHLCV` | `network`, `pool_address`, `start`, `interval`, `limit` | Candlestick price data |
-| `getPoolTransactions` | `network`, `pool_address` | Recent swaps and trades |
+| `getNetworkPools` | `network`*, `page`, `limit`, `sort`(asc/desc), `order_by`(volume_usd/price_usd/transactions/last_price_change_usd_24h/created_at) | All pools on a network |
+| `getDexPools` | `network`*, `dex`*, `page`, `limit`, `sort`(asc/desc), `order_by`(volume_usd/price_usd/transactions/last_price_change_usd_24h/created_at) | Pools for a specific DEX |
+| `getNetworkPoolsFilter` | `network`*, `page`, `limit`, `volume_24h_min`, `volume_24h_max`, `txns_24h_min`, `created_after`(unix), `created_before`(unix), `sort_by`(volume_24h/txns_24h/created_at), `sort_dir`(asc/desc) | Filtered pool search |
+| `getPoolDetails` | `network`*, `pool_address`*, `inversed` | Full pool info: TVL, volume, fees |
+| `getPoolOHLCV` | `network`*, `pool_address`*, `start`*, `end`, `limit`, `interval`(1m/5m/10m/15m/30m/1h/6h/12h/24h), `inversed` | Candlestick price data |
+| `getPoolTransactions` | `network`*, `pool_address`*, `page`, `limit`, `cursor` | Recent swaps and trades |
 
 ### Token Data
 
-| Tool | Parameters | Description |
+| Tool | Parameters (* = required) | Description |
 |------|-----------|-------------|
-| `getTokenDetails` | `network`, `token_address` | Token metadata and market data |
-| `getTokenPools` | `network`, `token_address`, `order_by`, `limit` | Pools containing a token |
-| `getTokenMultiPrices` | `network`, `tokens[]` (up to 10) | Batch token prices |
+| `getTokenDetails` | `network`*, `token_address`* | Token metadata and market data |
+| `getTokenPools` | `network`*, `token_address`*, `page`, `limit`, `sort`(asc/desc), `order_by`(volume_usd/price_usd/transactions/last_price_change_usd_24h/created_at), `reorder`, `address` | Pools containing a token |
+| `getTokenMultiPrices` | `network`*, `tokens`*: array (up to 10) | Batch token prices |
 
 ## Supported Networks
 
@@ -75,7 +77,7 @@ DexPaprika uses network slug identifiers:
 | Arbitrum | `arbitrum` |
 | Base | `base` |
 | Polygon | `polygon` |
-| BSC | `bsc` |
+| BNB Chain (BSC) | `bsc` |
 | Optimism | `optimism` |
 | Avalanche | `avalanche` |
 | Solana | `solana` |

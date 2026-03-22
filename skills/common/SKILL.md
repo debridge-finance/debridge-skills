@@ -138,7 +138,7 @@ This applies to all npm packages referenced in downstream skills — MCP servers
 
 For environments with Node.js but no native MCP support, use `@apify/mcpc` as a CLI client. Read [mcpc-usage.md](mcpc-usage.md) for full usage.
 
-Quick start: `npx -y @apify/mcpc connect agents.debridge.com/mcp @debridge && npx -y @apify/mcpc @debridge tools-call get_supported_chains`
+Quick start: `npx -y @apify/mcpc https://agents.debridge.com/mcp connect @debridge && npx -y @apify/mcpc @debridge tools-call get_supported_chains`
 
 ---
 
@@ -167,7 +167,7 @@ When running inside Claude Code or any CLI agent, use `@apify/mcpc` to call deBr
 
 ```bash
 # Connect (one-time per session)
-npx -y @apify/mcpc connect agents.debridge.com/mcp @debridge
+npx -y @apify/mcpc https://agents.debridge.com/mcp connect @debridge
 
 # Now call any deBridge tool
 npx -y @apify/mcpc @debridge tools-call get_supported_chains
@@ -180,7 +180,7 @@ npx -y @apify/mcpc --json @debridge tools-call create_tx \
   dstChainTokenOutRecipient:=0xYourAddress
 
 # Close when done
-npx -y @apify/mcpc close @debridge
+npx -y @apify/mcpc @debridge close
 ```
 
 Read [mcpc-usage.md](mcpc-usage.md) for full details (argument syntax, JSON output, piping).

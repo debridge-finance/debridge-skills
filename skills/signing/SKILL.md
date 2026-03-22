@@ -97,7 +97,7 @@ Most signers need an RPC connection to the source chain:
 - web3.py: pass RPC URL to `Web3(HTTPProvider(url))`
 - Privy MCP: handles RPC internally — no RPC URL needed from the agent
 
-Use public RPCs or the user's configured RPC. Do not hardcode RPC URLs in skill content — let the user provide them or detect from environment (`$ETH_RPC_URL`, `$RPC_URL`).
+Use public RPCs or the user's configured RPC. Prefer user-provided RPCs or environment variables (`$ETH_RPC_URL`, `$RPC_URL`) over hardcoded defaults. The balance query skills include public RPCs as fallback defaults — override them when the user has configured RPCs.
 
 For programmatic RPC discovery from Chainlist, read ../common/rpc-discovery.md.
 

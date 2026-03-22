@@ -47,7 +47,7 @@ Before starting, verify MCP is connected:
 2. If it returns chain data → MCP is ready. Continue below.
 3. If tool not found → MCP not connected. In CLI environments, use the mcpc wrapper to call deBridge tools directly from the shell — no restart needed:
    ```bash
-   npx -y @apify/mcpc connect agents.debridge.com/mcp @debridge
+   npx -y @apify/mcpc https://agents.debridge.com/mcp connect @debridge
    npx -y @apify/mcpc @debridge tools-call get_supported_chains
    ```
    For persistent setup (requires restart): read ../common/SKILL.md Phase 2 or ../common/mcp-setup.md.
@@ -69,7 +69,7 @@ Look up token addresses and decimals on the swap chain.
 
 ```
 Call mcp__debridge__search_tokens:
-  - query: "USDC"
+  - search: "USDC"
   - chainId: 42161
 ```
 
@@ -77,9 +77,11 @@ Repeat for the output token. Record `address` and `decimals`.
 
 ### Step 2: Estimate Swap
 
+Note: despite the name "estimate", this tool returns executable transaction data — no separate execution step is needed.
+
 ```
 Call mcp__debridge__estimate_same_chain_swap:
-  - chainId:        "42161"                (chain deBridge ID)
+  - chainId:        42161                  (chain deBridge ID)
   - tokenIn:        "0xaf88...e5831"       (input token address)
   - tokenInAmount:  "1000000000"           (amount in raw units — see Amount Conversion)
   - tokenOut:       "0x0000...0000"        (output token address)
@@ -130,7 +132,7 @@ Look up token addresses and decimals on source and destination chains.
 
 ```
 Call mcp__debridge__search_tokens:
-  - query: "USDC"
+  - search: "USDC"
   - chainId: 1          (source chain)
 ```
 
@@ -143,10 +145,10 @@ For Solana native token (SOL), use `11111111111111111111111111111111`.
 
 ```
 Call mcp__debridge__create_tx:
-  - srcChainId:              "1"                    (source chain deBridge ID)
+  - srcChainId:              1                      (source chain deBridge ID)
   - srcChainTokenIn:         "0xA0b8...eB48"       (source token address)
   - srcChainTokenInAmount:   "100000000"            (amount in raw units — see Amount Conversion)
-  - dstChainId:              "42161"                (destination chain deBridge ID)
+  - dstChainId:              42161                  (destination chain deBridge ID)
   - dstChainTokenOut:        "0xaf88...e5831"       (destination token address)
   - dstChainTokenOutRecipient: "0xYourAddress..."   (recipient on destination chain)
 ```

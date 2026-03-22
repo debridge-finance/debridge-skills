@@ -2,7 +2,7 @@
 title: On-Chain Explorer — Address, Transaction, Contract Lookup
 impact: HIGH
 impactDescription: "Verify transactions and inspect addresses after bridge/swap operations"
-tags: blockscout, alchemy, explorer, transactions, address, contract, abi, ens
+tags: blockscout, explorer, transactions, address, contract, abi, ens
 ---
 
 # On-Chain Explorer
@@ -45,11 +45,12 @@ docker run --rm -i ghcr.io/blockscout/mcp-server:latest
 | Tool | Parameters | Description |
 |------|-----------|-------------|
 | `get_chains_list` | — | All known blockchain networks |
+| `get_block_info` | `chain_id`, `number_or_hash`, `include_transactions` | Block details by number or hash |
 | `get_address_info` | `chain_id`, `address` | Balance, ENS name, contract status |
 | `get_tokens_by_address` | `chain_id`, `address`, `cursor` | ERC-20 holdings with market data |
-| `get_transactions_by_address` | `chain_id`, `address`, `age_from`, `age_to`, `methods`, `cursor` | Transactions in a time range |
-| `get_token_transfers_by_address` | `chain_id`, `address`, `age_from`, `age_to`, `token`, `cursor` | Token transfers by address and timeframe |
-| `get_transaction_info` | `chain_id`, `hash`, `include_raw_input` | Full transaction details with decoded input |
+| `get_transactions_by_address` | `chain_id`, `address`, `age_from` (required), `age_to`, `methods`, `cursor` | Transactions in a time range |
+| `get_token_transfers_by_address` | `chain_id`, `address`, `age_from` (required), `age_to`, `token`, `cursor` | Token transfers by address and timeframe |
+| `get_transaction_info` | `chain_id`, `transaction_hash`, `include_raw_input` | Full transaction details with decoded input |
 | `get_contract_abi` | `chain_id`, `address` | Smart contract ABI (verified contracts) |
 | `inspect_contract_code` | `chain_id`, `address`, `file_name` | Verified contract source code |
 | `lookup_token_by_symbol` | `chain_id`, `symbol` | Find token by symbol or name |
@@ -81,7 +82,7 @@ Blockscout uses standard EVM chain IDs. Common ones for deBridge:
 
 2. Call mcp__blockscout__get_transaction_info:
      chain_id: "42161"                    // Arbitrum
-     hash: "0xabc123..."
+     transaction_hash: "0xabc123..."
      include_raw_input: false
 
 3. Confirm status is "ok" and the expected token transfer is present.
@@ -105,70 +106,14 @@ Returns: contract address, name, decimals, total supply.
 
 ---
 
-## Alchemy MCP (Alternative — API Key Required)
+## Common Use Cases
 
-Alchemy covers major EVM chains with multichain address queries and transfer history. Useful when Blockscout is slow or for aggregated multichain views.
-
-### Installation
-
-```bash
-# One-shot
-npx -y @alchemy/mcp-server
-
-# Persistent
-npm install -g @alchemy/mcp-server
-
-# Claude Code
-claude mcp add alchemy -- npx -y @alchemy/mcp-server \
-  --env ALCHEMY_API_KEY=<your-key>
-```
-
-```json
-// Claude Desktop
-{
-  "mcpServers": {
-    "alchemy": {
-      "command": "npx",
-      "args": ["-y", "@alchemy/mcp-server"],
-      "env": {
-        "ALCHEMY_API_KEY": "<your-key>"
-      }
-    }
-  }
-}
-```
-
-Get a free API key at [alchemy.com](https://www.alchemy.com).
-
-### Key Tools
-
-| Tool | Parameters | Description |
-|------|-----------|-------------|
-| `fetchAddressTransactionHistory` | `address`, `networks` | Transaction history across multiple chains |
-| `fetchTransfers` | `address`, filters | Asset movement details |
-| `fetchTokensOwnedByMultichainAddresses` | `addresses`, `chains` | Token balances across chains |
-| `fetchNftsOwnedByMultichainAddresses` | `addresses`, spam filter | NFT holdings |
-
-### Example: Check Multi-Chain Balance After Bridge
-
-```
-Call mcp__alchemy__fetchTokensOwnedByMultichainAddresses:
-  addresses: ["0xYourWallet"]
-  chains: ["eth-mainnet", "arb-mainnet", "base-mainnet"]
-
-Returns token holdings per chain — verify the bridged tokens arrived.
-```
-
----
-
-## When to Use Which
-
-| Scenario | Use |
-|----------|-----|
-| Verify a single transaction | Blockscout (free, no key) |
-| Look up contract ABI or source | Blockscout |
-| Read contract state | Blockscout `read_contract` |
-| ENS resolution | Blockscout `get_address_by_ens_name` |
-| Multi-chain balance overview | Alchemy `fetchTokensOwnedByMultichainAddresses` |
-| Transfer history across chains | Alchemy `fetchTransfers` |
-| Chains with sparse explorer support | Blockscout (3000+ chains) |
+| Scenario | Tool |
+|----------|------|
+| Verify a single transaction | `get_transaction_info` |
+| Look up contract ABI or source | `get_contract_abi` / `inspect_contract_code` |
+| Read contract state | `read_contract` |
+| ENS resolution | `get_address_by_ens_name` |
+| Token holdings for an address | `get_tokens_by_address` |
+| Transfer history by time range | `get_transactions_by_address` / `get_token_transfers_by_address` |
+| Block details | `get_block_info` |

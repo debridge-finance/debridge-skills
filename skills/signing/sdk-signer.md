@@ -89,12 +89,12 @@ If `create_tx` returns an `approveTx`, send it first:
 
 ```typescript
 // ethers v6
-const approveTx = await wallet.sendTransaction({
-  to: approveTxData.to,
-  data: approveTxData.data,
+const approveResponse = await wallet.sendTransaction({
+  to: approveTx.to,
+  data: approveTx.data,
   value: "0",
 });
-await approveTx.wait(1); // must confirm before bridge tx
+await approveResponse.wait(1); // must confirm before bridge tx
 ```
 
 ## Common Errors
