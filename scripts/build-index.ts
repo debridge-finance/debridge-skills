@@ -12,6 +12,7 @@ interface SkillEntry {
   description: string;
   entry_point: string;
   references: string[];
+  scripts?: string[];
 }
 
 interface SkillIndex {
@@ -110,14 +111,29 @@ function main(): void {
       .sort()
       .map((f) => `skills/${dirName}/${f}`);
 
-    skills.push({
+    // Discover bundled scripts
+    const scriptsDir = join(skillDir, "scripts");
+    const scripts = existsSync(scriptsDir) && statSync(scriptsDir).isDirectory()
+      ? readdirSync(scriptsDir)
+          .filter((f) => f.endsWith(".ts") || f.endsWith(".js") || f.endsWith(".py") || f.endsWith(".sh"))
+          .sort()
+          .map((f) => `skills/${dirName}/scripts/${f}`)
+      : [];
+
+    const entry: SkillEntry = {
       name: frontmatter.name,
       description: frontmatter.description,
       entry_point: `skills/${dirName}/SKILL.md`,
       references: refs,
-    });
+    };
+    if (scripts.length > 0) {
+      entry.scripts = scripts;
+    }
+    skills.push(entry);
 
-    console.log(`  ✓ ${dirName} (${refs.length} reference${refs.length !== 1 ? "s" : ""})`);
+    const parts = [`${refs.length} ref${refs.length !== 1 ? "s" : ""}`];
+    if (scripts.length > 0) parts.push(`${scripts.length} script${scripts.length !== 1 ? "s" : ""}`);
+    console.log(`  ✓ ${dirName} (${parts.join(", ")})`);
   }
 
   const index: SkillIndex = {

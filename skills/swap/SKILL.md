@@ -45,7 +45,12 @@ Before starting, verify MCP is connected:
 
 1. Call `mcp__debridge__get_supported_chains` (no parameters).
 2. If it returns chain data → MCP is ready. Continue below.
-3. If tool not found → MCP not connected. Read ../common/SKILL.md Phase 2 to set up, or read ../common/mcp-setup.md.
+3. If tool not found → MCP not connected. In CLI environments, use the mcpc wrapper to call deBridge tools directly from the shell — no restart needed:
+   ```bash
+   npx -y @apify/mcpc connect agents.debridge.com/mcp @debridge
+   npx -y @apify/mcpc @debridge tools-call get_supported_chains
+   ```
+   For persistent setup (requires restart): read ../common/SKILL.md Phase 2 or ../common/mcp-setup.md.
 
 ## Routing Decision
 

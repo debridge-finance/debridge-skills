@@ -93,3 +93,13 @@ The `create_tx` call may accept slippage parameters. If the estimated output amo
 | Slippage    | Output significantly below expect  | Re-quote or increase tolerance  |
 
 All checks pass → proceed to ../signing/SKILL.md.
+
+## Bundled Scripts
+
+The `../common/scripts/` directory has TypeScript helpers that automate these checks. All scripts auto-discover RPC endpoints from Chainlist.
+
+| Script | Preflight use | Example |
+|--------|--------------|---------|
+| `balance.ts` | Check token or native balance | `npx tsx balance.ts 0xAddr 42161 --token 0xUSDC` |
+| `allowance.ts` | Check ERC-20 allowance | `npx tsx allowance.ts 0xUSDC 0xOwner 0xSpender 42161 --check 1000000000` |
+| `approve.ts` | Send approval tx | `npx tsx approve.ts 0xUSDC 0xSpender 42161 --amount 1000000000` |

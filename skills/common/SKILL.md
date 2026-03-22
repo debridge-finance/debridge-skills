@@ -28,6 +28,7 @@ metadata:
 | Identify available signers    | Phase 3 below                            |
 | Look up chain IDs and tokens  | [chain-config.md](chain-config.md)       |
 | Discover RPC endpoints        | [rpc-discovery.md](rpc-discovery.md)     |
+| Run bundled helper scripts    | `scripts/` directory (balance, allowance, convert, RPC) |
 | Call MCP tools from CLI       | [mcpc-usage.md](mcpc-usage.md)           |
 | Swap or bridge tokens         | ../swap/SKILL.md                         |
 | Set up a wallet               | ../wallets/SKILL.md                      |
@@ -154,19 +155,45 @@ Call `mcp__debridge__get_supported_chains` (no parameters).
 
 | Environment  | Recommended Method | Action                                             |
 |--------------|--------------------|----------------------------------------------------|
-| CLI          | stdio-mcp          | Run setup command below                            |
+| CLI          | mcpc wrapper       | Use mcpc to call MCP tools from the shell — no restart needed |
 | MCP Desktop  | streaming-mcp      | Read [mcp-setup.md](mcp-setup.md) for client config |
 | Browser      | manual             | Guide user to set up an MCP-capable environment    |
-| Headless     | stdio-mcp          | Read [mcp-setup.md](mcp-setup.md) for SDK setup   |
+| Headless     | stdio-mcp or mcpc  | Read [mcp-setup.md](mcp-setup.md) for SDK setup   |
 | Chat-only    | manual             | Guide user to set up an MCP-capable environment    |
 
-#### CLI Quick Setup
+#### CLI: Use mcpc (preferred — no restart needed)
+
+When running inside Claude Code or any CLI agent, use `@apify/mcpc` to call deBridge MCP tools directly from the shell. This works immediately without restarting the session:
 
 ```bash
-npx -y @debridge-finance/debridge-mcp@latest
+# Connect (one-time per session)
+npx -y @apify/mcpc connect agents.debridge.com/mcp @debridge
+
+# Now call any deBridge tool
+npx -y @apify/mcpc @debridge tools-call get_supported_chains
+npx -y @apify/mcpc @debridge tools-call search_tokens chainId:=1 search:=USDC
+npx -y @apify/mcpc --json @debridge tools-call create_tx \
+  srcChainId:=1 dstChainId:=42161 \
+  srcChainTokenIn:=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 \
+  dstChainTokenOut:=0xaf88d065e77c8cC2239327C5EDb3A432268e5831 \
+  srcChainTokenInAmount:='"100000000"' \
+  dstChainTokenOutRecipient:=0xYourAddress
+
+# Close when done
+npx -y @apify/mcpc close @debridge
 ```
 
-This starts a local MCP server on stdio. For full configuration (Claude Desktop JSON, Cursor config, programmatic SDK usage), read [mcp-setup.md](mcp-setup.md).
+Read [mcpc-usage.md](mcpc-usage.md) for full details (argument syntax, JSON output, piping).
+
+#### CLI: Persistent MCP setup (alternative — requires restart)
+
+To add deBridge MCP as a permanent server (available in all future sessions without mcpc):
+
+```bash
+claude mcp add --transport http debridge https://agents.debridge.com/mcp
+```
+
+This requires restarting the Claude Code session. For Claude Desktop, Cursor, or programmatic SDK setup, read [mcp-setup.md](mcp-setup.md).
 
 ### 2.3 Future Access Methods
 

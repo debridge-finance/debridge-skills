@@ -84,6 +84,16 @@ Formula: `raw_units = human_amount × 10^decimals`
 
 Always look up token decimals first via `mcp__debridge__search_tokens` if the token is not listed above.
 
+### Bundled Script
+
+The `scripts/convert-amount.ts` helper handles conversion in both directions and can read decimals on-chain:
+
+```bash
+npx tsx scripts/convert-amount.ts 100 6                          # → {"raw":"100000000","decimals":6,"human":"100"}
+npx tsx scripts/convert-amount.ts 100 0xA0b8...eB48 1            # reads decimals from contract on Ethereum
+npx tsx scripts/convert-amount.ts 100000000 6 --reverse           # raw → human
+```
+
 ## Dynamic Lookup
 
 For tokens not listed:

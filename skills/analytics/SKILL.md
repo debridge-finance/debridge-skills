@@ -159,6 +159,16 @@ All direct query methods require an RPC endpoint. Resolve RPCs in this order:
 2. User-provided URL.
 3. Discover from Chainlist — read ../common/rpc-discovery.md.
 
+**Bundled scripts** (in `../common/scripts/`) provide a faster path when Node.js is available:
+
+```bash
+npx tsx ../common/scripts/balance.ts 0xAddr 1 42161 8453          # native balance on 3 chains
+npx tsx ../common/scripts/balance.ts 0xAddr 42161 --token 0xUSDC  # ERC-20 balance
+npx tsx ../common/scripts/balance.ts --derive 1 42161 8453        # derive address from $PRIVATE_KEY, then query
+```
+
+These scripts auto-discover RPCs from Chainlist and support `--json` output.
+
 ### Deriving Address from Private Key
 
 If only `PRIVATE_KEY` is available and no address is known, each reference file includes a "Deriving Address" section. The address must be derived before any balance query.

@@ -188,6 +188,18 @@ Chainlist data changes infrequently. Cache the full `rpcs.json` response:
 - **Long-lived processes**: cache in memory, refresh every 6 hours.
 - **One-shot queries**: fetch fresh each time (< 500 KB).
 
+## Bundled Script
+
+The `scripts/rpc.ts` helper wraps the Chainlist lookup with caching and health checks:
+
+```bash
+npx tsx scripts/rpc.ts 42161              # → https://arb1.arbitrum.io/rpc (first healthy RPC)
+npx tsx scripts/rpc.ts 42161 --all        # list all RPCs for Arbitrum
+npx tsx scripts/rpc.ts 1 --json           # → {"chainId":1,"rpc":"https://...","name":"Ethereum Mainnet"}
+```
+
+Other scripts (`balance.ts`, `allowance.ts`, `approve.ts`, `convert-amount.ts`) use `rpc.ts` internally for auto-discovery — no need to pass `--rpc` unless you want to override.
+
 ## Common Errors
 
 | Error | Cause | Fix |

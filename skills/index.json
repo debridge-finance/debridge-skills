@@ -11,9 +11,17 @@
       "references": [
         "skills/common/chain-config.md",
         "skills/common/mcp-setup.md",
+        "skills/common/mcpc-usage.md",
         "skills/common/rpc-discovery.md",
-        "skills/common/skill-freshness.md",
-        "skills/common/mcpc-usage.md"
+        "skills/common/skill-freshness.md"
+      ],
+      "scripts": [
+        "skills/common/scripts/allowance.ts",
+        "skills/common/scripts/approve.ts",
+        "skills/common/scripts/balance.ts",
+        "skills/common/scripts/convert-amount.ts",
+        "skills/common/scripts/erc20.ts",
+        "skills/common/scripts/rpc.ts"
       ]
     },
     {
