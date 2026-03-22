@@ -2,15 +2,17 @@
 name: debridge-analytics
 description: >
   Query DeFi analytics and on-chain data from third-party MCP servers to
-  make informed bridging and swapping decisions. Covers token prices
-  (CoinGecko), on-chain lookups (Blockscout), protocol TVL and yields
-  (DefiLlama), and DEX pool liquidity (DexPaprika). All servers are free
-  and require no API key. Use this skill whenever the user asks about
-  token prices, wallet balances, portfolio overview, transaction history,
-  protocol TVL, DEX liquidity, yield opportunities, or on-chain data.
+  make informed bridging and swapping decisions. Covers token prices and
+  exchange data (CoinGecko, Crypto.com, mcp-crypto-price), on-chain
+  lookups (Blockscout), protocol TVL and yields (DefiLlama), and DEX pool
+  liquidity (DexPaprika). All servers are free and require no API key.
+  Use this skill whenever the user asks about token prices, wallet
+  balances, portfolio overview, transaction history, protocol TVL, DEX
+  liquidity, yield opportunities, orderbook depth, or on-chain data.
   Also use for: "what's the price of ETH", "check my balance", "how much
   USDC do I have across chains", "show me the TVL of Aave", "is there
-  enough liquidity to swap", "look up this transaction".
+  enough liquidity to swap", "look up this transaction", "show me the
+  ETH orderbook", "what's the trading volume".
 license: MIT
 metadata:
   author: deBridge
@@ -25,9 +27,9 @@ Third-party MCP servers provide analytics data useful before, during, and after 
 
 ## Quick Reference
 
-| Want to...                              | MCP                      | Reference                                          |
-|-----------------------------------------|--------------------------|----------------------------------------------------|
-| Get token prices and market data        | CoinGecko                | [token-prices.md](token-prices.md)                 |
+| Want to...                              | MCP                          | Reference                                          |
+|-----------------------------------------|------------------------------|----------------------------------------------------|
+| Get token prices and market data        | CoinGecko, Crypto.com        | [token-prices.md](token-prices.md)                 |
 | Look up address, tx, or contract        | Blockscout               | [onchain-explorer.md](onchain-explorer.md)         |
 | Check protocol TVL, fees, yields        | DefiLlama                | [defi-tvl.md](defi-tvl.md)                         |
 | Analyze DEX pools, OHLCV, trades        | DexPaprika               | [dex-pools.md](dex-pools.md)                       |
@@ -45,6 +47,7 @@ Use **`npx`** for one-shot exploration — the package is fetched, executed once
 npx -y @coingecko/coingecko-mcp         # try CoinGecko MCP
 npx -y @nic0xflamel/defillama-mcp-server # try DefiLlama MCP
 npx dexpaprika-mcp                       # try DexPaprika MCP
+npx -y mcp-crypto-price                  # try mcp-crypto-price MCP
 ```
 
 Use **`npm install -g`** (or add to `devDependencies`) when building a persistent agent harness, a recurring script, or a long-lived process:
@@ -96,12 +99,14 @@ claude mcp add --transport http <name> <hosted-url>
 
 All analytics MCPs are free and require no API key:
 
-| MCP         | API Key Required | Endpoint                                          |
-|-------------|------------------|---------------------------------------------------|
-| CoinGecko   | No               | Hosted: `https://mcp.api.coingecko.com/mcp`      |
-| Blockscout  | No               | Hosted: `https://mcp.blockscout.com/mcp`          |
-| DefiLlama   | No               | Local: `npx -y @nic0xflamel/defillama-mcp-server` |
-| DexPaprika  | No               | Local: `npx dexpaprika-mcp`                       |
+| MCP              | API Key Required | Endpoint                                          |
+|------------------|------------------|---------------------------------------------------|
+| CoinGecko        | No               | Hosted: `https://mcp.api.coingecko.com/mcp`      |
+| Crypto.com       | No               | Hosted: `https://mcp.crypto.com/market-data/mcp`  |
+| Blockscout       | No               | Hosted: `https://mcp.blockscout.com/mcp`          |
+| DefiLlama        | No               | Local: `npx -y @nic0xflamel/defillama-mcp-server` |
+| DexPaprika       | No               | Local: `npx dexpaprika-mcp`                       |
+| mcp-crypto-price | No               | Local: `npx -y mcp-crypto-price`                  |
 
 ---
 
@@ -175,7 +180,7 @@ If no analytics MCPs are installed, you can still gather basic data:
 | Transaction verification | Use an RPC `eth_getTransactionReceipt` call or the bundled scripts |
 | Pool liquidity / TVL / yields | No direct fallback — suggest installing CoinGecko MCP (free, no key): `claude mcp add --transport http coingecko https://mcp.api.coingecko.com/mcp` |
 
-For a quick start with zero setup, CoinGecko (hosted, no API key) and Blockscout (hosted, no API key) cover most pre-swap research needs.
+For a quick start with zero setup, CoinGecko (hosted, no API key), Crypto.com (hosted, no API key), and Blockscout (hosted, no API key) cover most pre-swap research needs.
 
 ## Common Errors
 

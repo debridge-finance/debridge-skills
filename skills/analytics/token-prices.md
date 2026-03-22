@@ -2,7 +2,7 @@
 title: Token Prices and Market Data
 impact: HIGH
 impactDescription: "Price verification before bridge/swap operations"
-tags: prices, market-data, coingecko, ohlcv, trending
+tags: prices, market-data, coingecko, cryptocom, ohlcv, trending, orderbook
 ---
 
 # Token Prices and Market Data
@@ -80,12 +80,130 @@ Call `get_search` or `get_id_coins` to resolve a symbol to its CoinGecko ID.
 
 ---
 
-## Common Use Cases
+## Crypto.com Exchange MCP (No API Key — Hosted)
 
-| Scenario | Tool |
-|----------|------|
-| Quick price check by coin name | `get_simple_price` (hosted, no key) |
-| Price by contract address | `get_coins_contract` or `get_id_simple_token_price` |
-| Historical OHLCV chart | `get_range_coins_market_chart` or `get_range_coins_ohlc` |
-| On-chain DEX token data | `get_tokens_networks_onchain_info` (GeckoTerminal) |
-| Trending coins and markets | `get_search_trending` |
+Real-time exchange data from Crypto.com: orderbooks, recent trades, and OHLCV candles. Complements CoinGecko by providing exchange-level market microstructure data.
+
+### Installation
+
+Hosted endpoint (no install, no key):
+
+```bash
+# Claude Code
+claude mcp add --transport http cryptocom https://mcp.crypto.com/market-data/mcp
+```
+
+```json
+// Claude Desktop
+{
+  "mcpServers": {
+    "cryptocom": {
+      "type": "streamable-http",
+      "url": "https://mcp.crypto.com/market-data/mcp"
+    }
+  }
+}
+```
+
+### Key Tools
+
+| Tool | Parameters (\* = required) | Description |
+|------|-----------|-------------|
+| `get_instruments` | (none) | List all available trading instruments |
+| `get_instrument` | `instrument_name`\* | Instrument detail by ID |
+| `get_tickers` | `instrument_name` | Ticker(s) — price, volume, bid/ask for one or all instruments |
+| `get_ticker` | `instrument_name`\* | Single ticker for an instrument |
+| `get_index_price` | `instrument_name`\* | Index price for an instrument |
+| `get_mark_price` | `instrument_name`\* | Mark price for an instrument |
+| `get_book` | `instrument_name`\*, `depth` (max 150) | Order book snapshot (bids/asks) |
+| `get_trades` | `instrument_name`\*, `count` (max 150) | Recent trades (default 10) |
+| `get_candlestick` | `instrument_name`\*, `timeframe`\* | OHLCV candles (up to 50) |
+
+Instrument names use underscore format: `BTC_USDT`, `ETH_USDT`, `SOL_USDT`, etc. Call `get_instruments` to list all.
+
+### Example: Check BTC Market Depth Before Large Swap
+
+```
+1. Call mcp__cryptocom__get_book:
+     instrument_name: "BTC_USDT"
+     depth: 20
+
+2. Review bid/ask spread and depth to estimate slippage.
+
+3. Call mcp__cryptocom__get_candlestick:
+     instrument_name: "BTC_USDT"
+     timeframe: "4h"
+
+4. Check recent price trend before proceeding with the bridge.
+```
+
+---
+
+## mcp-crypto-price (No API Key — Local)
+
+Real-time prices, market analysis with exchange volume distribution, and historical trend analysis. Uses the CoinCap public API.
+
+### Installation
+
+```bash
+# One-shot
+npx -y mcp-crypto-price
+
+# Claude Code
+claude mcp add crypto-price -- npx -y mcp-crypto-price
+```
+
+```json
+// Claude Desktop
+{
+  "mcpServers": {
+    "crypto-price": {
+      "command": "npx",
+      "args": ["-y", "mcp-crypto-price"]
+    }
+  }
+}
+```
+
+### Key Tools
+
+| Tool | Parameters (\* = required) | Description |
+|------|-----------|-------------|
+| `get-crypto-price` | `symbol`\* (e.g., "BTC") | Real-time price, 24h change, volume, market cap |
+| `get-market-analysis` | `symbol`\* | Top 5 exchanges by volume with price per exchange and volume distribution % |
+| `get-historical-analysis` | `symbol`\*, `interval` (m1/m5/m15/m30/h1/h2/h6/h12/d1), `days` (1-30) | Historical data with trend analysis, high/low, volatility metrics |
+| `get-top-assets` | `limit` (1-50, default 10) | Top cryptocurrencies ranked by market cap |
+
+### Example: Pre-Bridge Market Analysis
+
+```
+1. Call mcp__crypto_price__get-market-analysis:
+     symbol: "ETH"
+
+2. Review which exchanges have the most volume and
+   whether prices are consistent across them.
+
+3. Call mcp__crypto_price__get-historical-analysis:
+     symbol: "ETH"
+     interval: "h1"
+     days: 7
+
+4. Check volatility metrics before committing to the swap.
+```
+
+---
+
+## When to Use Which
+
+| Scenario | MCP | Tool |
+|----------|-----|------|
+| Quick price check by coin name | CoinGecko | `get_simple_price` |
+| Price by contract address | CoinGecko | `get_coins_contract` or `get_id_simple_token_price` |
+| Historical OHLCV chart (by coin ID) | CoinGecko | `get_range_coins_market_chart` |
+| On-chain DEX token data | CoinGecko | `get_tokens_networks_onchain_info` (GeckoTerminal) |
+| Trending coins and markets | CoinGecko | `get_search_trending` |
+| Exchange orderbook depth | Crypto.com | `get_book` |
+| Exchange-level OHLCV candles | Crypto.com | `get_candlestick` |
+| Recent exchange trades | Crypto.com | `get_trades` |
+| Exchange volume distribution | mcp-crypto-price | `get-market-analysis` |
+| Historical volatility and trends | mcp-crypto-price | `get-historical-analysis` |
