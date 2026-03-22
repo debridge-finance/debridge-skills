@@ -11,15 +11,11 @@ DexPaprika provides real-time DEX pool data: liquidity, OHLCV candles, recent tr
 
 ## Installation
 
+Hosted endpoint (recommended — no install):
+
 ```bash
-# One-shot
-npx dexpaprika-mcp
-
-# Persistent
-npm install -g dexpaprika-mcp
-
 # Claude Code
-claude mcp add dexpaprika -- npx dexpaprika-mcp
+claude mcp add --transport http dexpaprika https://mcp.dexpaprika.com/streamable-http
 ```
 
 ```json
@@ -27,11 +23,21 @@ claude mcp add dexpaprika -- npx dexpaprika-mcp
 {
   "mcpServers": {
     "dexpaprika": {
-      "command": "npx",
-      "args": ["dexpaprika-mcp"]
+      "type": "streamable-http",
+      "url": "https://mcp.dexpaprika.com/streamable-http"
     }
   }
 }
+```
+
+Local (alternative):
+
+```bash
+# One-shot
+npx dexpaprika-mcp
+
+# Claude Code
+claude mcp add dexpaprika -- npx dexpaprika-mcp
 ```
 
 No API key needed.

@@ -4,15 +4,16 @@ description: >
   Query DeFi analytics and on-chain data from third-party MCP servers to
   make informed bridging and swapping decisions. Covers token prices and
   exchange data (CoinGecko, Crypto.com, mcp-crypto-price), on-chain
-  lookups (Blockscout), protocol TVL and yields (DefiLlama), and DEX pool
-  liquidity (DexPaprika). All servers are free and require no API key.
-  Use this skill whenever the user asks about token prices, wallet
+  lookups and multi-chain analytics (Blockscout, Hive Intelligence),
+  protocol TVL, yields, and vault risk (DefiLlama, Philidor), and DEX
+  pool liquidity (DexPaprika). All servers are free and require no API
+  key. Use this skill whenever the user asks about token prices, wallet
   balances, portfolio overview, transaction history, protocol TVL, DEX
-  liquidity, yield opportunities, orderbook depth, or on-chain data.
-  Also use for: "what's the price of ETH", "check my balance", "how much
-  USDC do I have across chains", "show me the TVL of Aave", "is there
-  enough liquidity to swap", "look up this transaction", "show me the
-  ETH orderbook", "what's the trading volume".
+  liquidity, yield opportunities, orderbook depth, vault risk, token
+  security, or on-chain data. Also use for: "what's the price of ETH",
+  "check my balance", "show me the TVL of Aave", "is there enough
+  liquidity to swap", "look up this transaction", "is this token safe",
+  "what's the risk of this vault".
 license: MIT
 metadata:
   author: deBridge
@@ -30,10 +31,12 @@ Third-party MCP servers provide analytics data useful before, during, and after 
 | Want to...                              | MCP                          | Reference                                          |
 |-----------------------------------------|------------------------------|----------------------------------------------------|
 | Get token prices and market data        | CoinGecko, Crypto.com        | [token-prices.md](token-prices.md)                 |
-| Look up address, tx, or contract        | Blockscout               | [onchain-explorer.md](onchain-explorer.md)         |
-| Check protocol TVL, fees, yields        | DefiLlama                | [defi-tvl.md](defi-tvl.md)                         |
-| Analyze DEX pools, OHLCV, trades        | DexPaprika               | [dex-pools.md](dex-pools.md)                       |
-| Query balances directly (no MCP)        | ethers, viem, cast, web3 | Direct Balance Queries below                       |
+| Look up address, tx, or contract        | Blockscout, Hive             | [onchain-explorer.md](onchain-explorer.md)         |
+| Check protocol TVL, fees, yields        | DefiLlama, Philidor          | [defi-tvl.md](defi-tvl.md)                         |
+| Analyze DEX pools, OHLCV, trades        | DexPaprika                   | [dex-pools.md](dex-pools.md)                       |
+| Assess DeFi vault risk                  | Philidor                     | [defi-tvl.md](defi-tvl.md)                         |
+| Token security / rug pull check         | Hive                         | [onchain-explorer.md](onchain-explorer.md)         |
+| Query balances directly (no MCP)        | ethers, viem, cast, web3     | Direct Balance Queries below                       |
 
 ---
 
@@ -104,8 +107,10 @@ All analytics MCPs are free and require no API key:
 | CoinGecko        | No               | Hosted: `https://mcp.api.coingecko.com/mcp`      |
 | Crypto.com       | No               | Hosted: `https://mcp.crypto.com/market-data/mcp`  |
 | Blockscout       | No               | Hosted: `https://mcp.blockscout.com/mcp`          |
+| Hive Intelligence| No               | Hosted: `https://hiveintelligence.xyz/mcp`        |
+| Philidor         | No               | Hosted: `https://mcp.philidor.io/api/mcp`        |
+| DexPaprika       | No               | Hosted: `https://mcp.dexpaprika.com/streamable-http` |
 | DefiLlama        | No               | Local: `npx -y @nic0xflamel/defillama-mcp-server` |
-| DexPaprika       | No               | Local: `npx dexpaprika-mcp`                       |
 | mcp-crypto-price | No               | Local: `npx -y mcp-crypto-price`                  |
 
 ---

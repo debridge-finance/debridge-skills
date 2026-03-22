@@ -1,8 +1,8 @@
 ---
-title: DeFi Protocol Analytics — TVL, Fees, Yields
+title: DeFi Protocol Analytics — TVL, Fees, Yields, Vault Risk
 impact: HIGH
-impactDescription: "Protocol health and yield data for informed bridging decisions"
-tags: defillama, tvl, fees, revenue, yields, stablecoins, dex-volume
+impactDescription: "Protocol health, yield data, and vault risk scoring for informed bridging decisions"
+tags: defillama, philidor, tvl, fees, revenue, yields, stablecoins, dex-volume, vault-risk
 ---
 
 # DeFi Protocol Analytics
@@ -238,6 +238,69 @@ Returns: { price: 1.0001, symbol: "USDC", ... }
 Supported chain slugs: `ethereum`, `bsc`, `polygon`, `arbitrum`, `optimism`, `base`, `avalanche`, `solana`.
 
 For token pricing without @iqai, use CoinGecko MCP (see [token-prices.md](token-prices.md)).
+
+---
+
+## Philidor (DeFi Vault Risk Scoring — No API Key, Hosted)
+
+Scores 700+ DeFi vaults across Morpho, Aave, Spark, Yearn, Beefy, Compound, and Uniswap. Three-vector risk framework (Asset 40%, Platform 40%, Governance 20%) with Prime/Core/Edge tier classification. Use after identifying yield opportunities via DefiLlama to assess risk before bridging funds.
+
+### Installation
+
+Hosted endpoint (no install, no key):
+
+```bash
+# Claude Code
+claude mcp add --transport http philidor https://mcp.philidor.io/api/mcp
+```
+
+```json
+// Claude Desktop
+{
+  "mcpServers": {
+    "philidor": {
+      "type": "streamable-http",
+      "url": "https://mcp.philidor.io/api/mcp"
+    }
+  }
+}
+```
+
+### Key Tools
+
+| Tool | Parameters (\* = required) | Description |
+|------|-----------|-------------|
+| `search_vaults` | `query`, `chain`, `protocol`, `asset`, `riskTier`, `minTvl`, `sortBy`, `sortOrder`, `limit` | Search and filter DeFi vaults by chain, protocol, asset, risk tier, TVL |
+| `get_vault` | `id`, `network`, `address` | Detailed vault info including risk breakdown and historical snapshots |
+| `get_vault_risk_breakdown` | `network`\*, `address`\* | Detailed risk vectors: Asset Composition, Platform Code, Governance scores |
+| `compare_vaults` | `vaults`\* (array of 2-3) | Side-by-side comparison on TVL, APR, risk score, audit status |
+| `find_safest_vaults` | `asset`, `chain`, `minTvl` | Top 10 safest vaults, filtered by asset/chain/TVL |
+| `get_protocol_info` | `protocolId`\* | Protocol details: TVL, vault count, auditors, security incidents |
+| `get_curator_info` | `curatorId`\* | Curator's managed vaults, TVL, chain distribution |
+| `get_market_overview` | (none) | DeFi vault market: total TVL, vault count, risk distribution by protocol |
+| `explain_risk_score` | `score`\* (number) | Explain a risk score: tier, calculation method, thresholds |
+| `list_vaults_with_incidents` | (none) | Vaults with critical incidents in the last 365 days |
+
+### Example: Assess Vault Risk After Bridging
+
+```
+1. Find yield opportunities via DefiLlama:
+   Call mcp__defillama__get_pools
+   → Identify a high-APY vault on Arbitrum
+
+2. Check the vault's risk score:
+   Call mcp__philidor__get_vault_risk_breakdown:
+     network: "arbitrum"
+     address: "0xVaultAddress..."
+
+3. Compare with alternatives:
+   Call mcp__philidor__find_safest_vaults:
+     asset: "USDC"
+     chain: "arbitrum"
+
+4. If risk is acceptable → proceed to bridge via ../swap/SKILL.md.
+   If risk is high → suggest a safer vault or a different chain.
+```
 
 ---
 

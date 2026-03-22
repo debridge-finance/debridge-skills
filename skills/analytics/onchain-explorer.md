@@ -1,8 +1,8 @@
 ---
-title: On-Chain Explorer — Address, Transaction, Contract Lookup
+title: On-Chain Explorer — Address, Transaction, Contract, Portfolio
 impact: HIGH
 impactDescription: "Verify transactions and inspect addresses after bridge/swap operations"
-tags: blockscout, explorer, transactions, address, contract, abi, ens
+tags: blockscout, hive, explorer, transactions, address, contract, abi, ens, portfolio, security
 ---
 
 # On-Chain Explorer
@@ -106,14 +106,90 @@ Returns: contract address, name, decimals, total supply.
 
 ---
 
-## Common Use Cases
+## Hive Intelligence (Multi-Chain Analytics — No API Key, Hosted)
 
-| Scenario | Tool |
-|----------|------|
-| Verify a single transaction | `get_transaction_info` |
-| Look up contract ABI or source | `get_contract_abi` / `inspect_contract_code` |
-| Read contract state | `read_contract` |
-| ENS resolution | `get_address_by_ens_name` |
-| Token holdings for an address | `get_tokens_by_address` |
-| Transfer history by time range | `get_transactions_by_address` / `get_token_transfers_by_address` |
-| Block details | `get_block_info` |
+Comprehensive Web3 data across 60+ blockchains with 351 endpoints spanning 14 analytics categories. Uses a meta-tool pattern: category tools return endpoint lists, then `invoke_api_endpoint` calls them.
+
+### Installation
+
+Hosted endpoint (no install, no key):
+
+```bash
+# Claude Code
+claude mcp add --transport http hive https://hiveintelligence.xyz/mcp
+```
+
+```json
+// Claude Desktop
+{
+  "mcpServers": {
+    "hive": {
+      "type": "streamable-http",
+      "url": "https://hiveintelligence.xyz/mcp"
+    }
+  }
+}
+```
+
+### How It Works
+
+Hive uses a two-step pattern:
+
+1. **Discover endpoints** — call a category tool (e.g., `get_portfolio_wallet_endpoints`) to get available endpoints and their schemas.
+2. **Invoke endpoint** — call `invoke_api_endpoint` with the endpoint name and arguments.
+
+### Category Tools
+
+| Tool | Description |
+|------|-------------|
+| `get_market_and_price_endpoints` | Real-time and historical crypto price data |
+| `get_onchain_dex_pool_endpoints` | DEX and pool analytics |
+| `get_portfolio_wallet_endpoints` | Wallet balances, transaction history |
+| `get_token_contract_endpoints` | Token and contract analysis |
+| `get_defi_protocol_endpoints` | DeFi protocol analytics |
+| `get_nft_analytics_endpoints` | NFT collection and marketplace data |
+| `get_security_risk_endpoints` | Token security analysis, rug pull detection |
+| `get_network_infrastructure_endpoints` | Network health, gas prices |
+| `get_search_discovery_endpoints` | Trending tokens, search |
+| `get_social_sentiment_endpoints` | Social media analytics, sentiment |
+
+### Utility Tools
+
+| Tool | Parameters (\* = required) | Description |
+|------|-----------|-------------|
+| `get_api_endpoint_schema` | `endpoint`\* | Get schema for a specific endpoint |
+| `invoke_api_endpoint` | `endpoint_name`\*, `args`\* (object) | Call any Hive endpoint with arguments |
+
+### Example: Check Token Security Before Swap
+
+```
+1. Discover security endpoints:
+   Call mcp__hive__get_security_risk_endpoints
+
+2. Get schema for token security check:
+   Call mcp__hive__get_api_endpoint_schema:
+     endpoint: "token_security_check"
+
+3. Check the token:
+   Call mcp__hive__invoke_api_endpoint:
+     endpoint_name: "token_security_check"
+     args: { "chain": "ethereum", "address": "0xTokenAddress..." }
+```
+
+---
+
+## When to Use Which
+
+| Scenario | MCP | Tool |
+|----------|-----|------|
+| Verify a single transaction | Blockscout | `get_transaction_info` |
+| Look up contract ABI or source | Blockscout | `get_contract_abi` / `inspect_contract_code` |
+| Read contract state | Blockscout | `read_contract` |
+| ENS resolution | Blockscout | `get_address_by_ens_name` |
+| Token holdings for an address | Blockscout | `get_tokens_by_address` |
+| Transfer history by time range | Blockscout | `get_transactions_by_address` |
+| Block details | Blockscout | `get_block_info` |
+| Token security / rug pull check | Hive | `get_security_risk_endpoints` → `invoke_api_endpoint` |
+| Multi-chain portfolio overview | Hive | `get_portfolio_wallet_endpoints` → `invoke_api_endpoint` |
+| Social sentiment analysis | Hive | `get_social_sentiment_endpoints` → `invoke_api_endpoint` |
+| NFT analytics | Hive | `get_nft_analytics_endpoints` → `invoke_api_endpoint` |
