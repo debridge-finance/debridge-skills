@@ -35,7 +35,7 @@ Agents with built-in web fetch (Claude Code `WebFetch`, OpenHands `browse`) can 
 
 ## Method 2: MCP Resources (MCP Desktop, any MCP-connected environment)
 
-If deBridge MCP is connected (confirmed in Phase 2), the server at `https://agents.debridge.com/mcp` exposes skills as MCP resources. List and read them:
+If deBridge MCP is connected (confirmed during ACCESS_SETUP), the server at `https://agents.debridge.com/mcp` exposes skills as MCP resources. List and read them:
 
 ```
 resources/list  → returns available skill resources

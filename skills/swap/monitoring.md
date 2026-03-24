@@ -35,12 +35,6 @@ const order = await response.json();
 console.log("Status:", order.status);
 ```
 
-```python
-import requests
-response = requests.get(f"https://stats-api.dln.trade/api/Orders/{order_id}")
-print("Status:", response.json()["status"])
-```
-
 ## Status Values
 
 | Status          | Meaning                                              | Action             |

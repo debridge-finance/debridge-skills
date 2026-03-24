@@ -26,11 +26,6 @@ const balance = await tokenContract.balanceOf(walletAddress);
 // balance must be >= srcChainTokenInAmount (both in raw units)
 ```
 
-```python
-# web3.py
-balance = token_contract.functions.balanceOf(wallet_address).call()
-```
-
 If balance < required amount → **STOP**. Inform the user of the shortfall.
 
 ### Native Token (ETH, BNB, etc.)

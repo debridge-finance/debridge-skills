@@ -92,28 +92,6 @@ const ethRpcs = getRpcs(1);
 // → ["https://eth.llamarpc.com", "https://rpc.mevblocker.io", ...]
 ```
 
-### Python
-
-```python
-import requests
-
-resp = requests.get("https://chainlist.org/rpcs.json")
-chains = resp.json()
-
-def get_rpcs(chain_id: int) -> list[str]:
-    chain = next((c for c in chains if c["chainId"] == chain_id and not c.get("isTestnet")), None)
-    if not chain:
-        return []
-    return [
-        r["url"] for r in chain["rpc"]
-        if r.get("tracking") in ("none", "limited")
-        and "${" not in r["url"] and "{" not in r["url"]
-    ]
-
-# Example: get privacy-respecting Arbitrum RPCs
-arb_rpcs = get_rpcs(42161)
-```
-
 ### Bash (curl + jq)
 
 ```bash
@@ -188,17 +166,27 @@ Chainlist data changes infrequently. Cache the full `rpcs.json` response:
 - **Long-lived processes**: cache in memory, refresh every 6 hours.
 - **One-shot queries**: fetch fresh each time (< 500 KB).
 
-## Bundled Script
+## Bundled Scripts
 
-The `scripts/rpc.ts` helper wraps the Chainlist lookup with caching and health checks:
+Two RPC discovery scripts with identical functionality — use whichever matches your runtime:
+
+| Script | Runtime | Import |
+|--------|---------|--------|
+| `scripts/rpc.mjs` | Node.js (ESM) | `import { getRpc } from "../common/scripts/rpc.mjs"` |
+| `scripts/rpc.ts` | TypeScript (`npx tsx`) | `import { getRpc } from "./rpc"` |
+
+Both support CLI usage:
 
 ```bash
-npx tsx scripts/rpc.ts 42161              # → https://arb1.arbitrum.io/rpc (first healthy RPC)
-npx tsx scripts/rpc.ts 42161 --all        # list all RPCs for Arbitrum
-npx tsx scripts/rpc.ts 1 --json           # → {"chainId":1,"rpc":"https://...","name":"Ethereum Mainnet"}
+node scripts/rpc.mjs 42161              # → first healthy RPC for Arbitrum
+node scripts/rpc.mjs 42161 --all        # list all RPCs
+node scripts/rpc.mjs 137 --json         # → {"chainId":137,"rpc":"https://...","name":"Polygon"}
+node scripts/rpc.mjs 7565164            # → Solana RPC (env var or public fallback)
 ```
 
-Other scripts (`balance.ts`, `allowance.ts`, `approve.ts`, `convert-amount.ts`) use `rpc.ts` internally for auto-discovery — no need to pass `--rpc` unless you want to override.
+`rpc.mjs` also supports Solana (chain ID `7565164`) via `$SOLANA_RPC_URL` or a public fallback — Solana is not on Chainlist.
+
+Other scripts (`balance-evm.mjs`, `balance-solana.mjs`, `debridge-evm-bridge.mjs`, `debridge-solana-bridge.mjs`) import `rpc.mjs` for auto-discovery.
 
 ## Common Errors
 

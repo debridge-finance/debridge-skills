@@ -6,7 +6,7 @@
   "skills": [
     {
       "name": "debridge-common",
-      "description": "Shared prerequisite for all deBridge agent skills. Detects agent runtime environment (CLI, MCP Desktop, browser, headless, chat-only), selects deBridge access method (streaming MCP, stdio MCP, SDK, CLI), and identifies available transaction signers. Run this first before any deBridge operation. Use whenever the user mentions deBridge for the first time in a session, asks about supported chains, needs to connect to deBridge MCP, or wants to check what signing methods are available. Also use when troubleshooting deBridge connectivity, checking environment capabilities, or setting up RPC endpoints.",
+      "description": "Shared prerequisite for all deBridge agent skills. Runs three stages: ENVIRONMENT_DETECTION (CLI, MCP Desktop, browser, headless, chat-only), ACCESS_SETUP (streaming MCP, stdio MCP, mcpc, SDK), and WALLET_DISCOVERY (auto-discover all signers and resolve wallet addresses). Run this first before any deBridge operation. Use whenever the user mentions deBridge for the first time in a session, asks about supported chains, needs to connect to deBridge MCP, or wants to check what signing methods are available. Also use when troubleshooting deBridge connectivity, checking environment capabilities, or setting up RPC endpoints.",
       "entry_point": "skills/common/SKILL.md",
       "references": [
         "skills/common/chain-config.md",
@@ -20,7 +20,9 @@
         "skills/common/scripts/approve.ts",
         "skills/common/scripts/balance.ts",
         "skills/common/scripts/convert-amount.ts",
+        "skills/common/scripts/env-keys.mjs",
         "skills/common/scripts/erc20.ts",
+        "skills/common/scripts/rpc.mjs",
         "skills/common/scripts/rpc.ts"
       ]
     },
@@ -31,23 +33,32 @@
       "references": [
         "skills/analytics/balance-cast.md",
         "skills/analytics/balance-ethers.md",
-        "skills/analytics/balance-web3py.md",
+        "skills/analytics/balance-solana.md",
         "skills/analytics/defi-tvl.md",
         "skills/analytics/dex-pools.md",
         "skills/analytics/onchain-explorer.md",
         "skills/analytics/token-prices.md"
+      ],
+      "scripts": [
+        "skills/analytics/scripts/balance-evm.mjs",
+        "skills/analytics/scripts/balance-solana.mjs"
       ]
     },
     {
       "name": "debridge-signing",
-      "description": "Sign and broadcast deBridge transactions. Routes to the correct signing method based on the detected signer: private key with ethers/viem, Foundry cast, browser wallet (MetaMask), web3.py, or Privy embedded wallet. Use this skill whenever a deBridge transaction needs to be signed and sent on-chain — including bridge transactions, swap transactions, and token approvals. Also use when the user asks \"how do I sign this transaction\", \"send the transaction\", \"approve the token\", \"broadcast to chain\", or needs help with EIP-712 typed data signing. This skill is called automatically by the bridge and swap workflows, but can also be used standalone for signing guidance.",
+      "description": "Sign and broadcast deBridge transactions. Routes to the correct signing method based on the detected signer: OWS local self-custody wallet, private key with ethers/viem, Foundry cast, browser wallet (MetaMask), or Privy embedded wallet. Use this skill whenever a deBridge transaction needs to be signed and sent on-chain — including bridge transactions, swap transactions, and token approvals. Also use when the user asks \"how do I sign this transaction\", \"send the transaction\", \"approve the token\", \"broadcast to chain\", \"sign with OWS\", \"ows wallet\", or needs help with EIP-712 typed data signing. This skill is called automatically by the bridge and swap workflows, but can also be used standalone for signing guidance.",
       "entry_point": "skills/signing/SKILL.md",
       "references": [
         "skills/signing/foundry-cast.md",
         "skills/signing/metamask.md",
+        "skills/signing/ows-signing.md",
         "skills/signing/privy-mcp.md",
-        "skills/signing/sdk-signer.md",
-        "skills/signing/web3py.md"
+        "skills/signing/sdk-signer.md"
+      ],
+      "scripts": [
+        "skills/signing/scripts/debridge-evm-bridge.mjs",
+        "skills/signing/scripts/debridge-solana-bridge.mjs",
+        "skills/signing/scripts/ows-solana-sign.mjs"
       ]
     },
     {
@@ -61,7 +72,7 @@
     },
     {
       "name": "debridge-wallets",
-      "description": "Set up a wallet for deBridge transactions. Use when the user has no signer available, needs to create a new wallet, or wants to configure wallet access for an AI agent. Covers generating a private key, creating a Foundry keystore, installing a browser wallet (MetaMask), and setting up Privy embedded wallets for zero-UI autonomous agent trading. Use this skill when: the user says \"I don't have a wallet\", \"how do I set up a wallet\", \"create a new wallet\", \"generate an address\", \"I need a wallet for bridging\", \"set up Privy\", \"embedded wallet for my agent\", \"keystore setup\", or when common Phase 3 detected no signer. Also relevant for \"conversational trading setup\" and \"autonomous agent wallet\".",
+      "description": "Set up a wallet for deBridge transactions. Use when the user has no signer available, needs to create a new wallet, or wants to configure wallet access for an AI agent. Covers OWS local self-custody wallets (recommended — multi-chain, encrypted keys, CLI/JS), generating a raw private key, creating a Foundry keystore, installing a browser wallet (MetaMask), and setting up Privy embedded wallets for zero-UI autonomous agent trading. Use this skill when: the user says \"I don't have a wallet\", \"how do I set up a wallet\", \"create a new wallet\", \"generate an address\", \"I need a wallet for bridging\", \"set up OWS\", \"OWS wallet\", \"set up Privy\", \"embedded wallet for my agent\", \"keystore setup\", or when WALLET_DISCOVERY detected no signer. Also relevant for \"conversational trading setup\" and \"autonomous agent wallet\".",
       "entry_point": "skills/wallets/SKILL.md",
       "references": [
         "skills/wallets/privy-embedded.md"

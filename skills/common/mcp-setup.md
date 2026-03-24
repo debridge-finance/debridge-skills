@@ -139,7 +139,7 @@ After configuration, verify the connection:
 
 1. Call `mcp__debridge__get_supported_chains` (no parameters).
 2. Expected: JSON array of chain objects with `chainId` and `chainName`.
-3. If successful → MCP is ready. Return to SKILL.md Phase 3.
+3. If successful → MCP is ready. Proceed to WALLET_DISCOVERY in SKILL.md.
 4. If failed → see troubleshooting below.
 
 ---

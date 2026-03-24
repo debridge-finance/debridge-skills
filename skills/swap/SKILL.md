@@ -47,10 +47,10 @@ Before starting, verify MCP is connected:
 2. If it returns chain data → MCP is ready. Continue below.
 3. If tool not found → MCP not connected. In CLI environments, use the mcpc wrapper to call deBridge tools directly from the shell — no restart needed:
    ```bash
-   npx -y @apify/mcpc https://agents.debridge.com/mcp connect @debridge
+   npx -y @apify/mcpc connect https://agents.debridge.com/mcp @debridge
    npx -y @apify/mcpc @debridge tools-call get_supported_chains
    ```
-   For persistent setup (requires restart): read ../common/SKILL.md Phase 2 or ../common/mcp-setup.md.
+   For persistent setup (requires restart): read ACCESS_SETUP in ../common/SKILL.md or ../common/mcp-setup.md.
 
 ## Routing Decision
 
@@ -69,8 +69,8 @@ Look up token addresses and decimals on the swap chain.
 
 ```
 Call mcp__debridge__search_tokens:
-  - search: "USDC"
-  - chainId: 42161
+  - query: "USDC"              (NOT "search" — the parameter is "query")
+  - chainId: "42161"           (string, NOT number)
 ```
 
 Repeat for the output token. Record `address` and `decimals`.
@@ -132,8 +132,8 @@ Look up token addresses and decimals on source and destination chains.
 
 ```
 Call mcp__debridge__search_tokens:
-  - search: "USDC"
-  - chainId: 1          (source chain)
+  - query: "USDC"               (NOT "search" — the parameter is "query")
+  - chainId: "1"                (string, NOT number)
 ```
 
 Repeat for destination chain. Record `address` and `decimals` from the response.
@@ -145,13 +145,17 @@ For Solana native token (SOL), use `11111111111111111111111111111111`.
 
 ```
 Call mcp__debridge__create_tx:
-  - srcChainId:              1                      (source chain deBridge ID)
-  - srcChainTokenIn:         "0xA0b8...eB48"       (source token address)
-  - srcChainTokenInAmount:   "100000000"            (amount in raw units — see Amount Conversion)
-  - dstChainId:              42161                  (destination chain deBridge ID)
-  - dstChainTokenOut:        "0xaf88...e5831"       (destination token address)
-  - dstChainTokenOutRecipient: "0xYourAddress..."   (recipient on destination chain)
+  - srcChainId:                    "1"                    (string, source chain deBridge ID)
+  - srcChainTokenIn:               "0xA0b8...eB48"       (source token address)
+  - srcChainTokenInAmount:         "100000000"            (amount in raw units — see Amount Conversion)
+  - dstChainId:                    "42161"                (string, destination chain deBridge ID)
+  - dstChainTokenOut:              "0xaf88...e5831"       (destination token address)
+  - dstChainTokenOutRecipient:     "0xRecipient..."       (recipient on destination chain)
+  - srcChainOrderAuthorityAddress: "0xSender..."          (REQUIRED — sender's address on source chain)
+  - dstChainOrderAuthorityAddress: "0xRecipient..."       (REQUIRED — recipient's address on destination chain)
 ```
+
+**All parameters are strings.** Do NOT pass numbers for chain IDs.
 
 The response from `create_tx` includes:
 - `tx` — the main transaction object (`to`, `data`, `value`, `chainId`)

@@ -34,26 +34,23 @@ cast balance "$ADDRESS" --rpc-url "$RPC_URL"
 
 ### Multi-Chain Scan
 
-RPCs below are public fallback defaults. Prefer user-provided RPCs or environment variables, or use ../common/rpc-discovery.md for programmatic discovery.
+**Recommended:** Use the bundled script instead:
+
+```bash
+node scripts/balance-evm.mjs <address_or_wallet> --chains 1,42161,8453,10,137,56,43114,59144
+```
+
+For cast-based multi-chain scanning, discover RPCs dynamically:
 
 ```bash
 #!/usr/bin/env bash
 ADDRESS=$(cast wallet address --private-key "$PRIVATE_KEY")
+CHAIN_IDS=(1 42161 8453 10 137 56 43114 59144)
 
-declare -A RPCS=(
-  ["Ethereum"]="https://eth.llamarpc.com"
-  ["Arbitrum"]="https://arb1.arbitrum.io/rpc"
-  ["Base"]="https://mainnet.base.org"
-  ["Optimism"]="https://mainnet.optimism.io"
-  ["Polygon"]="https://polygon-bor-rpc.publicnode.com"
-  ["BNB Chain"]="https://bsc-dataseed.binance.org"
-  ["Avalanche"]="https://api.avax.network/ext/bc/C/rpc"
-  ["Linea"]="https://rpc.linea.build"
-)
-
-for chain in "${!RPCS[@]}"; do
-  bal=$(cast balance "$ADDRESS" --rpc-url "${RPCS[$chain]}" --ether 2>/dev/null) || bal="error"
-  printf "%-12s %s\n" "$chain" "$bal"
+for id in "${CHAIN_IDS[@]}"; do
+  RPC=$(node ../common/scripts/rpc.mjs "$id")
+  bal=$(cast balance "$ADDRESS" --rpc-url "$RPC" --ether 2>/dev/null) || bal="error"
+  printf "chain %s: %s\n" "$id" "$bal"
 done
 ```
 
@@ -90,10 +87,10 @@ check_usdc() {
   printf "%-12s %s USDC\n" "$chain" "$human"
 }
 
-check_usdc "Ethereum" "https://eth.llamarpc.com"               "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-check_usdc "Arbitrum" "https://arb1.arbitrum.io/rpc"            "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
-check_usdc "Base"     "https://mainnet.base.org"                "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-check_usdc "Polygon"  "https://polygon-bor-rpc.publicnode.com"  "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+check_usdc "Ethereum" "$(node ../common/scripts/rpc.mjs 1)"     "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+check_usdc "Arbitrum" "$(node ../common/scripts/rpc.mjs 42161)" "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+check_usdc "Base"     "$(node ../common/scripts/rpc.mjs 8453)"  "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+check_usdc "Polygon"  "$(node ../common/scripts/rpc.mjs 137)"   "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
 ```
 
 ## Token Allowance Check

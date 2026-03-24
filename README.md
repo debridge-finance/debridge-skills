@@ -11,7 +11,7 @@ Skills are the guidance layer; MCP and/or SDK is the execution layer.
 | [common](skills/common/SKILL.md) | Shared prerequisite — environment detection, MCP setup, chain config, RPC discovery |
 | [bridge](skills/bridge/SKILL.md) | Cross-chain bridge via DLN: quote, preflight, sign, execute, monitor |
 | [swap](skills/swap/SKILL.md) | Same-chain and cross-chain token swaps |
-| [signing](skills/signing/SKILL.md) | Transaction signing — routes to ethers/viem, cast, MetaMask, web3.py, or Privy |
+| [signing](skills/signing/SKILL.md) | Transaction signing — routes to OWS, ethers/viem, cast, MetaMask, or Privy |
 | [wallets](skills/wallets/SKILL.md) | Wallet setup: EOA, Foundry keystore, Privy embedded |
 | [analytics](skills/analytics/SKILL.md) | Token prices, balances, TVL, DEX pools, on-chain data via third-party MCPs |
 
@@ -60,14 +60,14 @@ Add to your MCP config file:
 Each skill directory contains a `SKILL.md` entry point and sibling reference `.md` files. Skills follow four patterns:
 
 1. **Shared Prerequisite** — `common` runs first, detecting environment, MCP connectivity, and available signers.
-2. **Router** — `signing` and `analytics` detect the available tool (ethers, cast, web3.py, etc.) and route to the matching reference file.
+2. **Router** — `signing` and `analytics` detect the available tool (OWS, ethers, cast, etc.) and route to the matching reference file.
 3. **Sequential Pipeline** — `bridge` follows a strict order: quote → preflight → sign → execute → monitor.
 4. **MCP Probe with Fallback** — every skill that calls MCP tools provides an alternative path when MCP is unavailable.
 
 ```
 bridge/SKILL.md → preflight.md → ../signing/SKILL.md → execute → monitoring.md
                                         ↓
-                              sdk-signer.md | foundry-cast.md | metamask.md | web3py.md | privy-mcp.md
+                              ows-signing.md | sdk-signer.md | foundry-cast.md | metamask.md | privy-mcp.md
 ```
 
 ## Repository Structure
