@@ -1,15 +1,15 @@
 ---
 name: debridge-common
 description: >
-  Shared prerequisite for all deBridge agent skills. Detects agent runtime
-  environment (CLI, MCP Desktop, browser, headless, chat-only), selects
-  deBridge access method (streaming MCP, stdio MCP, SDK, CLI), and identifies
-  available transaction signers. Run this first before any deBridge operation.
-  Use whenever the user mentions deBridge for the first time in a session,
-  asks about supported chains, needs to connect to deBridge MCP, or wants to
-  check what signing methods are available. Also use when troubleshooting
-  deBridge connectivity, checking environment capabilities, or setting up
-  RPC endpoints.
+  Shared prerequisite for all deBridge agent skills. Runs three stages:
+  ENVIRONMENT_DETECTION (CLI, MCP Desktop, browser, headless, chat-only),
+  ACCESS_SETUP (streaming MCP, stdio MCP, mcpc, SDK), and WALLET_DISCOVERY
+  (auto-discover all signers and resolve wallet addresses). Run this first
+  before any deBridge operation. Use whenever the user mentions deBridge for
+  the first time in a session, asks about supported chains, needs to connect
+  to deBridge MCP, or wants to check what signing methods are available. Also
+  use when troubleshooting deBridge connectivity, checking environment
+  capabilities, or setting up RPC endpoints.
 license: MIT
 metadata:
   author: deBridge
@@ -22,10 +22,10 @@ metadata:
 
 | Want to...                    | Go to                                    |
 |-------------------------------|------------------------------------------|
-| Detect environment type       | Phase 1 below                            |
+| Detect environment type       | ENVIRONMENT_DETECTION below               |
 | Refresh skills to latest      | Skill Freshness Check below              |
-| Connect to deBridge MCP       | Phase 2 below + [mcp-setup.md](mcp-setup.md) |
-| Identify available signers    | Phase 3 below                            |
+| Connect to deBridge MCP       | ACCESS_SETUP below + [mcp-setup.md](mcp-setup.md) |
+| Discover wallets and signers  | WALLET_DISCOVERY below                   |
 | Look up chain IDs and tokens  | [chain-config.md](chain-config.md)       |
 | Discover RPC endpoints        | [rpc-discovery.md](rpc-discovery.md)     |
 | Run bundled helper scripts    | `scripts/` directory (balance, allowance, convert, RPC) |
@@ -40,14 +40,18 @@ After completing all three phases, record:
 ```
 Environment: <CLI | MCP Desktop | Browser | Headless | Chat-only>
 Access:      <streaming-mcp | stdio-mcp | mcpc | manual>
-Signer:      <env-privkey | foundry-cast | browser-wallet | ethers-viem | web3py | mcp-wallet | none>
+Signer:      <ows | env-privkey | foundry-cast | browser-wallet | ethers-viem | mcp-wallet | none>
+Wallets:
+  <signer_name> "<wallet_label>":
+    EVM:    <0x_address>
+    Solana: <base58_address>
 ```
 
-Downstream skills use these values to select the right code paths.
+Downstream skills use these values to select the right code paths. The `Wallets` section contains resolved standard addresses discovered during WALLET_DISCOVERY — pass these addresses (never wallet names) to all scripts and tools.
 
 ---
 
-## Phase 1: Detect Environment Group
+## ENVIRONMENT_DETECTION
 
 Run checks in order. Stop at the first match.
 
@@ -58,12 +62,11 @@ The agent can execute shell commands and has a runtime available.
 Detection:
 ```bash
 which node && echo "node available"
-which python3 && echo "python available"
 ```
 
-If bash works AND `node` or `python3` is found → **Environment = CLI**.
+If bash works AND `node` is found → **Environment = CLI**.
 
-Capabilities: full filesystem, package install (`npm`, `pip`), can run MCP stdio server locally, can read environment variables.
+Capabilities: full filesystem, package install (`npm`), can run MCP stdio server locally, can read environment variables.
 
 ### 1.2 MCP Desktop
 
@@ -138,17 +141,17 @@ This applies to all npm packages referenced in downstream skills — MCP servers
 
 For environments with Node.js but no native MCP support, use `@apify/mcpc` as a CLI client. Read [mcpc-usage.md](mcpc-usage.md) for full usage.
 
-Quick start: `npx -y @apify/mcpc https://agents.debridge.com/mcp connect @debridge && npx -y @apify/mcpc @debridge tools-call get_supported_chains`
+Quick start: `npx -y @apify/mcpc connect https://agents.debridge.com/mcp @debridge && npx -y @apify/mcpc @debridge tools-call get_supported_chains`
 
 ---
 
-## Phase 2: Select deBridge Access Method
+## ACCESS_SETUP
 
 ### 2.1 Probe for Existing MCP Connection
 
 Call `mcp__debridge__get_supported_chains` (no parameters).
 
-- **Returns chain data** → MCP is already connected. Access = **streaming-mcp** or **stdio-mcp**. Skip to Phase 3.
+- **Returns chain data** → MCP is already connected. Access = **streaming-mcp** or **stdio-mcp**. Skip to WALLET_DISCOVERY.
 - **Tool not found** → MCP not connected. Continue to 2.2.
 
 ### 2.2 Set Up MCP by Environment
@@ -167,17 +170,13 @@ When running inside Claude Code or any CLI agent, use `@apify/mcpc` to call deBr
 
 ```bash
 # Connect (one-time per session)
-npx -y @apify/mcpc https://agents.debridge.com/mcp connect @debridge
+npx -y @apify/mcpc connect https://agents.debridge.com/mcp @debridge
 
 # Now call any deBridge tool
 npx -y @apify/mcpc @debridge tools-call get_supported_chains
-npx -y @apify/mcpc @debridge tools-call search_tokens chainId:=1 search:=USDC
+npx -y @apify/mcpc @debridge tools-call search_tokens '{"query":"USDC","chainId":"1"}'
 npx -y @apify/mcpc --json @debridge tools-call create_tx \
-  srcChainId:=1 dstChainId:=42161 \
-  srcChainTokenIn:=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 \
-  dstChainTokenOut:=0xaf88d065e77c8cC2239327C5EDb3A432268e5831 \
-  srcChainTokenInAmount:='"100000000"' \
-  dstChainTokenOutRecipient:=0xYourAddress
+  '{"srcChainId":"1","dstChainId":"42161","srcChainTokenIn":"0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48","dstChainTokenOut":"0xaf88d065e77c8cC2239327C5EDb3A432268e5831","srcChainTokenInAmount":"100000000","dstChainTokenOutRecipient":"0xYourAddress","srcChainOrderAuthorityAddress":"0xYourAddress","dstChainOrderAuthorityAddress":"0xYourAddress"}'
 
 # Close when done
 npx -y @apify/mcpc @debridge close
@@ -207,30 +206,108 @@ When available, this skill will add detection and routing for them.
 ### 2.4 Verify Connection
 
 After setup, call `mcp__debridge__get_supported_chains` again.
-- Returns chain data → MCP is working. Proceed to Phase 3.
+- Returns chain data → MCP is working. Proceed to WALLET_DISCOVERY.
 - Fails → read [mcp-setup.md](mcp-setup.md) troubleshooting section.
 
 ---
 
-## Phase 3: Detect Available Signer
+## WALLET_DISCOVERY
 
 A signer is needed for on-chain transactions (bridge, swap, token approval).
 deBridge requires signing EIP-712 typed data messages and standard EVM transactions.
 
-Check in order. Stop at the first available signer.
+**Auto-discovery is mandatory.** When the user asks to check balances, bridge, swap, or perform any on-chain operation, the agent MUST automatically discover all available signers and resolve their wallet addresses — never ask the user for an address or wallet name. Run the checks below in order, collect ALL matches (do not stop at the first), then use the highest-priority signer for signing operations.
 
-### 3.1 Private Key in Environment
+After discovery, record all found wallets in the Detection Output (see top of this file) so downstream skills can use them without re-running discovery.
 
+Check in order. Collect all matches.
+
+### 3.1 OWS (Open Wallet Standard)
+
+**Detection:**
 ```bash
-test -n "$PRIVATE_KEY" && echo "available" || test -n "$DEBRIDGE_PRIVATE_KEY" && echo "available"
+which ows && echo "available"
 ```
 
-If set → **Signer = env-privkey**.
+Or check for the Node.js SDK:
+```bash
+node -e "require('@open-wallet-standard/core')" 2>/dev/null && echo "ows-node"
+```
 
-⚠️ CAUTION: Never log, print, or include the private key in any output.
+If any available → **Signer = ows**.
 
-### 3.2 Foundry Cast
+**Address discovery — resolve all addresses now:**
+```bash
+ows wallet list
+```
 
+Parse the output to extract addresses for each chain. The output format is:
+```
+ID:      <uuid>
+Name:    <wallet_name>
+Secured: ✓ (encrypted)
+  eip155:1 → 0x<evm_address>
+  solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp → <base58_solana_address>
+  ...
+Created: <timestamp>
+```
+
+Parsing rules:
+- Wallet name is on the `Name:` line (e.g., `Name:    default`).
+- Each chain address is indented and follows the pattern `<chain_namespace>:<chain_ref> → <address>`.
+- EVM address: extract from any `eip155:` line — all EVM chains share the same address.
+- Solana address: extract from the `solana:` line.
+- If multiple wallets exist, discover addresses for ALL of them.
+
+**Store the resolved standard addresses** (e.g., `0x000A...9c30` for EVM, `B7Z1...SUr` for Solana). Always pass these standard addresses — never wallet names — to scripts and downstream tools.
+
+OWS provides local self-custody signing with encrypted keys, policy-gated access, and multi-chain support (EVM, Solana, Tron). Recommended for CLI and agent environments — see ../wallets/SKILL.md Option 1 for setup.
+
+### 3.2 Private Key in Environment
+
+Use the bundled `env-keys.mjs` script to scan environment variables and `.env` files in one step. The script never prints raw key values — only variable names, sources, chain types, and derived addresses.
+
+**Detection and address discovery (single command):**
+```bash
+node scripts/env-keys.mjs
+```
+
+Human-readable output shows a table of discovered keys with their source, chain, and derived address. Use `--json` for machine-readable output:
+```bash
+node scripts/env-keys.mjs --json
+```
+
+JSON output format:
+```json
+[
+  { "name": "PRIVATE_KEY", "source": "env", "chain": "evm", "address": "0x...", "format": "hex-0x" },
+  { "name": "SOLANA_PRIVATE_KEY", "source": ".env", "chain": "solana", "address": "B7Z1...", "format": "json-array" }
+]
+```
+
+If any keys found → **Signer = env-privkey**. Record the derived addresses in the Detection Output.
+
+The script scans (in priority order):
+1. Environment variables: `PRIVATE_KEY`, `*_PRIVATE_KEY`, `*_KEY` (filtered by format)
+2. `.env` in current directory
+3. `.env.local` in current directory
+4. `~/.env` in home directory
+
+**Security warnings (issued automatically by the script):**
+- Keys found in `.env` files on disk trigger a plaintext storage warning
+- Keys found in environment variables trigger a weaker warning
+- Both recommend migrating to OWS for encrypted self-custody
+
+🚨 **If keys are found in files on disk**, relay the script's warning and recommend:
+> 1. Move to OWS: `curl -fsSL https://docs.openwallet.sh/install.sh | bash && ows wallet create`
+> 2. Delete the file containing the key after migrating
+> 3. Rotate the key if the file was ever committed to git or shared
+
+⚠️ CAUTION: Never log, print, or include private key values in any output. The script enforces this — do not bypass it with ad-hoc shell commands like `echo $PRIVATE_KEY` or `grep` that could leak key material.
+
+### 3.3 Foundry Cast
+
+**Detection:**
 ```bash
 which cast && echo "available"
 ```
@@ -239,14 +316,23 @@ If available → **Signer = foundry-cast**.
 
 Cast supports EIP-712 signing (`cast wallet sign --data`) and raw transaction sending (`cast send`). Requires a keystore or `--private-key` flag.
 
-### 3.3 Browser Wallet (EIP-1193)
+**Address discovery:**
+```bash
+# List cast wallets/keystores
+cast wallet list 2>/dev/null
+```
+
+### 3.4 Browser Wallet (EIP-1193)
 
 If `window.ethereum` exists → **Signer = browser-wallet**.
 
 Supports `eth_signTypedData_v4` for EIP-712 and `eth_sendTransaction` for raw transactions.
 
-### 3.4 ethers.js or viem
+**Address discovery:** Call `eth_requestAccounts` to get the connected address.
 
+### 3.5 ethers.js or viem
+
+**Detection:**
 ```bash
 node -e "require('ethers')" 2>/dev/null && echo "ethers"
 node -e "require('viem')" 2>/dev/null && echo "viem"
@@ -256,15 +342,7 @@ If either available → **Signer = ethers-viem**.
 
 Both support EIP-712 via `signer.signTypedData()` (ethers) or `walletClient.signTypedData()` (viem). Both can send raw transactions.
 
-### 3.5 web3.py (Python)
-
-```bash
-python3 -c "import web3" 2>/dev/null && echo "web3py"
-```
-
-If available → **Signer = web3py**.
-
-Supports EIP-712 via `w3.eth.account.sign_typed_data()` and raw transactions via `w3.eth.send_raw_transaction()`.
+**Address discovery:** Requires a private key or keystore — address comes from the key discovery in 3.2.
 
 ### 3.6 MCP-Managed Wallet
 
@@ -276,15 +354,36 @@ If available → **Signer = mcp-wallet**.
 
 Privy MCP handles signing server-side (keys in TEE). The agent passes `create_tx` output directly to Privy's `eth_sendTransaction` — no local key or RPC needed. See ../wallets/privy-embedded.md for setup.
 
-### 3.7 No Signer Available
+**Address discovery:** Call the MCP wallet's address/list endpoint to get managed addresses.
+
+### 3.8 No Signer Available
 
 If none matched → **Signer = none**.
 
 Guide the user to set up a signer:
-- Simplest: set `PRIVATE_KEY` environment variable
+- Recommended: install OWS (`curl -fsSL https://docs.openwallet.sh/install.sh | bash`) — multi-chain, encrypted keys, works with CLI/Node.js/Python
+- Quick start: set `PRIVATE_KEY` environment variable (EVM-only, plaintext)
 - For development: install Foundry (`curl -L https://foundry.paradigm.xyz | bash && foundryup`)
-- For agent workflows: set up Privy embedded wallet (see ../wallets/privy-embedded.md)
+- For delegated custody: set up Privy embedded wallet (see ../wallets/privy-embedded.md)
 - For all options: read ../wallets/SKILL.md
+
+### 3.9 Discovery Output
+
+After completing all checks, record discovered wallets. Example:
+
+```
+Signers found: ows, env-privkey
+Primary signer: ows
+
+Wallets:
+  OWS "default":
+    EVM:    0x000A5539cD9505b44575c56f929C657c73899c30
+    Solana: B7Z1whe4TX3tVXwb93Nsd9U4f4QZfnuzm5DyUnKxVSUr
+  env-privkey:
+    EVM:    0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18
+```
+
+Pass these resolved addresses to all downstream operations — balance scripts, signing, bridging. Never pass wallet names to scripts.
 
 ---
 
@@ -305,7 +404,7 @@ All MCP tools expect token amounts in **raw units** (the smallest indivisible un
 
 | Error                      | Cause                    | Fix                                                  |
 |----------------------------|--------------------------|------------------------------------------------------|
-| MCP tool not found         | Server not connected     | Re-run Phase 2                                       |
+| MCP tool not found         | Server not connected     | Re-run ACCESS_SETUP                                  |
 | `npx` not found            | Node.js not installed    | Install Node.js 18+                                  |
 | Permission denied on key   | Env var not exported      | `export PRIVATE_KEY=...` in shell config             |
 | Chain ID not recognized    | Wrong ID format          | Use deBridge chain IDs from [chain-config.md](chain-config.md) |

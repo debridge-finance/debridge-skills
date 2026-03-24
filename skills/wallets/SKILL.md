@@ -3,14 +3,16 @@ name: debridge-wallets
 description: >
   Set up a wallet for deBridge transactions. Use when the user has no signer
   available, needs to create a new wallet, or wants to configure wallet
-  access for an AI agent. Covers generating a private key, creating a
-  Foundry keystore, installing a browser wallet (MetaMask), and setting up
-  Privy embedded wallets for zero-UI autonomous agent trading. Use this skill
-  when: the user says "I don't have a wallet", "how do I set up a wallet",
-  "create a new wallet", "generate an address", "I need a wallet for
-  bridging", "set up Privy", "embedded wallet for my agent", "keystore
-  setup", or when common Phase 3 detected no signer. Also relevant for
-  "conversational trading setup" and "autonomous agent wallet".
+  access for an AI agent. Covers OWS local self-custody wallets (recommended
+  — multi-chain, encrypted keys, CLI/JS), generating a raw private key,
+  creating a Foundry keystore, installing a browser wallet (MetaMask),
+  and setting up Privy embedded wallets for zero-UI autonomous agent trading.
+  Use this skill when: the user says "I don't have a wallet", "how do I set
+  up a wallet", "create a new wallet", "generate an address", "I need a
+  wallet for bridging", "set up OWS", "OWS wallet", "set up Privy",
+  "embedded wallet for my agent", "keystore setup", or when WALLET_DISCOVERY
+  detected no signer. Also relevant for "conversational trading setup" and
+  "autonomous agent wallet".
 license: MIT
 metadata:
   author: deBridge
@@ -21,24 +23,67 @@ metadata:
 
 PREREQUISITE: Read ../common/SKILL.md for environment detection, auth, and chain configuration.
 
-Use this skill when common Phase 3 detected **Signer = none**. Choose the method that matches your environment.
+Use this skill when WALLET_DISCOVERY detected **Signer = none**. Choose the method that matches your environment.
 
 ## Quick Reference
 
 | Environment       | Recommended method       | Go to                                        |
 |-------------------|--------------------------|----------------------------------------------|
-| CLI + Node.js     | Generate key + env var   | Option 1 below                               |
-| CLI + Foundry     | Foundry keystore         | Option 2 below                               |
-| Browser           | Install MetaMask         | Option 3 below                               |
-| Agent (zero-UI)   | Privy embedded wallet    | Option 4 / [privy-embedded.md](privy-embedded.md) |
+| CLI / Agent       | **OWS** (recommended)   | Option 1 below                               |
+| CLI + Node.js     | Raw private key + env var| Option 2 below                               |
+| CLI + Foundry     | Foundry keystore         | Option 3 below                               |
+| Browser           | Install MetaMask         | Option 4 below                               |
+| Agent (zero-UI)   | Privy embedded wallet    | Option 5 / [privy-embedded.md](privy-embedded.md) |
 
-After setup, re-run common Phase 3 to confirm the signer is detected, then proceed to ../signing/SKILL.md.
+**Why OWS first?** It supports all deBridge chains (EVM, Solana, Tron) from a single wallet, encrypts keys at rest with policy-gated signing, works across CLI/Node.js environments, and generates addresses for all chains in one step. More secure than raw private keys, simpler than Foundry for multi-chain use.
+
+After setup, re-run WALLET_DISCOVERY to confirm the signer is detected, then proceed to ../signing/SKILL.md.
 
 ---
 
-## Option 1: Private Key via Environment Variable
+## Option 1: OWS Wallet (Open Wallet Standard) — Recommended
 
-Fastest path for CLI agents. Generates a random private key and stores it in the shell environment.
+Local self-custody wallet — private keys encrypted at rest on the user's machine, decrypted only in-process during signing, then wiped from memory. Policy-gated access, multi-chain support (EVM, Solana, Tron, Bitcoin, Cosmos, TON, Sui, and more).
+
+### Install
+
+Pick the method that matches your environment:
+
+| Environment | Command | What it installs |
+|-------------|---------|------------------|
+| Any (full suite) | `curl -fsSL https://docs.openwallet.sh/install.sh \| bash` | CLI + Node.js SDK |
+| Node.js only | `npm install @open-wallet-standard/core` | Node.js SDK (prebuilt binaries, no Rust needed) |
+| From source | `git clone https://github.com/open-wallet-standard/core.git && cd core/ows && cargo build --workspace --release` | Rust build |
+
+The full suite (`curl`) is recommended for agents — it gives you the CLI plus the Node.js SDK.
+
+### Create Wallet
+
+```bash
+ows wallet create
+```
+
+This generates keys for all supported chains in one step. Record the addresses from the output.
+
+### Verify
+
+```bash
+ows wallet list
+```
+
+### Fund the Wallet
+
+Send tokens to the OWS wallet address on the source chain before bridging.
+
+### Signing
+
+Proceed to ../signing/SKILL.md — the signing skill routes to [ows-signing.md](../signing/ows-signing.md) for OWS-specific signing flows (EVM direct, Solana pipeline, Tron).
+
+---
+
+## Option 2: Private Key via Environment Variable
+
+Fastest path if you only need a single EVM chain. Generates a random private key and stores it in the shell environment. Less secure than OWS — the key is stored in plaintext.
 
 ### Generate with Node.js
 
@@ -88,9 +133,9 @@ The new wallet has zero balance. Send native tokens (ETH, etc.) to the derived a
 
 ---
 
-## Option 2: Foundry Keystore
+## Option 3: Foundry Keystore
 
-More secure than a raw environment variable. The private key is encrypted at rest.
+More secure than a raw environment variable — the private key is encrypted at rest. EVM-only.
 
 ### Prerequisites
 
@@ -128,7 +173,7 @@ Send native tokens to the keystore address before bridging.
 
 ---
 
-## Option 3: Browser Wallet (MetaMask)
+## Option 4: Browser Wallet (MetaMask)
 
 For browser-based environments.
 
@@ -153,9 +198,9 @@ Send native tokens to the MetaMask address on the source chain before bridging.
 
 ---
 
-## Option 4: Privy Embedded Wallet
+## Option 5: Privy Embedded Wallet
 
-Server-side wallets managed by Privy infrastructure (keys secured in TEEs). The agent signs and broadcasts transactions via Privy MCP — no browser, no wallet popup, no manual signing. Best for autonomous agent workflows.
+Server-side wallets managed by Privy infrastructure (keys secured in TEEs). The agent signs and broadcasts transactions via Privy MCP — no browser, no wallet popup, no local keys. Best for autonomous agent workflows that need delegated custody.
 
 Read [privy-embedded.md](privy-embedded.md) for full setup.
 
@@ -170,12 +215,17 @@ Quick summary:
 
 ## After Setup
 
-For Options 1–3:
-1. Re-run common Phase 3 to verify the signer is detected.
+For Option 1 (OWS):
+1. Verify OWS CLI is available (`ows wallet list`).
+2. Proceed to ../signing/SKILL.md — it routes to the OWS signing reference.
+3. Then to ../swap/SKILL.md for the operation.
+
+For Options 2–4:
+1. Re-run WALLET_DISCOVERY to verify the signer is detected.
 2. Proceed to ../signing/SKILL.md for transaction signing.
 3. Then to ../swap/SKILL.md for the operation.
 
-For Option 4 (Privy):
+For Option 5 (Privy):
 1. Verify both deBridge and Privy MCPs are connected.
 2. The agent uses deBridge MCP for routing and Privy MCP for signing — no separate signing step needed.
 3. Proceed directly to ../swap/SKILL.md.

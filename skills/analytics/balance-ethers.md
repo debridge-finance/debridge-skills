@@ -101,34 +101,36 @@ console.log(`${formatUnits(balance, decimals)} ${symbol}`);
 
 ## Multi-Chain Balance Scan
 
-Query native balance across multiple chains in parallel. RPCs below are public fallback defaults — prefer user-provided RPCs, environment variables, or RPC discovery from ../common/rpc-discovery.md.
+**Recommended:** Use the bundled script instead of inline code:
+
+```bash
+node scripts/balance-evm.mjs 0x000A5539cD9505b44575c56f929C657c73899c30 --chains 1,42161,8453,10,137,56,43114,59144
+```
+
+The script accepts only a standard 0x EVM address (42 chars). Resolve wallet names first via WALLET_DISCOVERY.
+
+For inline code, discover RPCs dynamically via `../common/scripts/rpc.mjs` (or `rpc.ts`):
 
 ### ethers
 
 ```typescript
 import { ethers } from "ethers";
+import { getRpc, getChainInfo } from "../common/scripts/rpc.mjs";
 
-const chains = [
-  { name: "Ethereum",  chainId: 1,     rpc: "https://eth.llamarpc.com",     symbol: "ETH"  },
-  { name: "Arbitrum",  chainId: 42161, rpc: "https://arb1.arbitrum.io/rpc", symbol: "ETH"  },
-  { name: "Base",      chainId: 8453,  rpc: "https://mainnet.base.org",     symbol: "ETH"  },
-  { name: "Optimism",  chainId: 10,    rpc: "https://mainnet.optimism.io",  symbol: "ETH"  },
-  { name: "Polygon",   chainId: 137,   rpc: "https://polygon-bor-rpc.publicnode.com", symbol: "POL" },
-  { name: "BNB Chain", chainId: 56,    rpc: "https://bsc-dataseed.binance.org",       symbol: "BNB" },
-  { name: "Avalanche", chainId: 43114, rpc: "https://api.avax.network/ext/bc/C/rpc",  symbol: "AVAX" },
-  { name: "Linea",    chainId: 59144, rpc: "https://rpc.linea.build",                 symbol: "ETH" },
-];
+const chainIds = [1, 42161, 8453, 10, 137, 56, 43114, 59144];
 
-async function getBalance(chain: typeof chains[0], address: string) {
-  const provider = new ethers.JsonRpcProvider(chain.rpc, undefined, { staticNetwork: true });
+async function getBalance(chainId: number, address: string) {
+  const rpcUrl = await getRpc(chainId);
+  const info = await getChainInfo(chainId);
+  const provider = new ethers.JsonRpcProvider(rpcUrl, undefined, { staticNetwork: true });
   const balance = await Promise.race([
     provider.getBalance(address),
     new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 5000)),
   ]);
-  return { ...chain, balance: ethers.formatEther(balance) };
+  return { name: info?.name, symbol: info?.nativeCurrency.symbol, balance: ethers.formatEther(balance) };
 }
 
-const results = await Promise.allSettled(chains.map(c => getBalance(c, address)));
+const results = await Promise.allSettled(chainIds.map(id => getBalance(id, address)));
 for (const r of results) {
   if (r.status === "fulfilled") {
     const { name, symbol, balance } = r.value;
@@ -138,56 +140,33 @@ for (const r of results) {
 ```
 
 Key details:
+- RPCs are discovered from Chainlist with health checks — no hardcoded URLs.
 - Use `staticNetwork: true` to skip the initial `eth_chainId` call — faster and avoids retry loops on slow RPCs.
 - Always race with a timeout — public RPCs can hang indefinitely.
 - Use `Promise.allSettled` (not `Promise.all`) so one failed chain does not abort the rest.
 
-### viem
-
-```typescript
-import { createPublicClient, http, formatEther } from "viem";
-import { mainnet, arbitrum, base, optimism, polygon, bsc, avalanche, linea } from "viem/chains";
-
-const chains = [
-  { chain: mainnet,   rpc: "https://eth.llamarpc.com" },
-  { chain: arbitrum,  rpc: "https://arb1.arbitrum.io/rpc" },
-  { chain: base,      rpc: "https://mainnet.base.org" },
-  { chain: optimism,  rpc: "https://mainnet.optimism.io" },
-  { chain: polygon,   rpc: "https://polygon-bor-rpc.publicnode.com" },
-  { chain: bsc,       rpc: "https://bsc-dataseed.binance.org" },
-  { chain: avalanche, rpc: "https://api.avax.network/ext/bc/C/rpc" },
-  { chain: linea,     rpc: "https://rpc.linea.build" },
-];
-
-const results = await Promise.allSettled(
-  chains.map(async ({ chain, rpc }) => {
-    const client = createPublicClient({ chain, transport: http(rpc) });
-    const balance = await client.getBalance({ address });
-    return { name: chain.name, symbol: chain.nativeCurrency.symbol, balance: formatEther(balance) };
-  })
-);
-```
-
 ## ERC-20 Scan Across Chains
 
-Check a specific token (e.g., USDC) on all chains where it exists:
+Check a specific token (e.g., USDC) on multiple chains. Token addresses come from `../common/chain-config.md`; RPCs are discovered dynamically:
 
 ```typescript
 import { ethers } from "ethers";
+import { getRpc } from "../common/scripts/rpc.mjs";
 
 // USDC addresses from ../common/chain-config.md
 const usdcByChain = [
-  { name: "Ethereum", rpc: "https://eth.llamarpc.com",              token: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", decimals: 6 },
-  { name: "Arbitrum", rpc: "https://arb1.arbitrum.io/rpc",          token: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", decimals: 6 },
-  { name: "Base",     rpc: "https://mainnet.base.org",              token: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", decimals: 6 },
-  { name: "Polygon",  rpc: "https://polygon-bor-rpc.publicnode.com",token: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359", decimals: 6 },
+  { chainId: 1,     name: "Ethereum", token: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", decimals: 6 },
+  { chainId: 42161, name: "Arbitrum", token: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", decimals: 6 },
+  { chainId: 8453,  name: "Base",     token: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", decimals: 6 },
+  { chainId: 137,   name: "Polygon",  token: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359", decimals: 6 },
 ];
 
 const abi = ["function balanceOf(address) view returns (uint256)"];
 
 const results = await Promise.allSettled(
   usdcByChain.map(async (c) => {
-    const provider = new ethers.JsonRpcProvider(c.rpc, undefined, { staticNetwork: true });
+    const rpc = await getRpc(c.chainId);
+    const provider = new ethers.JsonRpcProvider(rpc, undefined, { staticNetwork: true });
     const contract = new ethers.Contract(c.token, abi, provider);
     const balance = await Promise.race([
       contract.balanceOf(address),

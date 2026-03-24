@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -sL https://raw.githubusercontent.com/anthropics/*)",
+      "Bash(curl -sL https://raw.githubusercontent.com/debridge-finance/*)"
+    ]
+  }
+}

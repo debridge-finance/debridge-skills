@@ -11,7 +11,7 @@ Some environments have Node.js and shell access but cannot add MCP servers nativ
 
 ```bash
 # 1. Connect to an MCP server (creates a named session)
-npx -y @apify/mcpc https://agents.debridge.com/mcp connect @debridge
+npx -y @apify/mcpc connect https://agents.debridge.com/mcp @debridge
 
 # 2. List available tools
 npx -y @apify/mcpc @debridge tools-list
@@ -20,22 +20,18 @@ npx -y @apify/mcpc @debridge tools-list
 npx -y @apify/mcpc @debridge tools-call get_supported_chains
 
 npx -y @apify/mcpc @debridge tools-call search_tokens \
-  chainId:=1 search:=USDC
+  '{"query":"USDC","chainId":"1"}'
 
 npx -y @apify/mcpc --json @debridge tools-call create_tx \
-  srcChainId:=1 dstChainId:=42161 \
-  srcChainTokenIn:=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 \
-  dstChainTokenOut:=0xaf88d065e77c8cC2239327C5EDb3A432268e5831 \
-  srcChainTokenInAmount:='"100000000"' \
-  dstChainTokenOutRecipient:=0xYourAddress
+  '{"srcChainId":"1","dstChainId":"42161","srcChainTokenIn":"0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48","dstChainTokenOut":"0xaf88d065e77c8cC2239327C5EDb3A432268e5831","srcChainTokenInAmount":"100000000","dstChainTokenOutRecipient":"0xYourAddress","srcChainOrderAuthorityAddress":"0xYourAddress","dstChainOrderAuthorityAddress":"0xYourAddress"}'
 
 # 4. Close session when done
 npx -y @apify/mcpc @debridge close
 ```
 
-**CLI syntax:** `mcpc [options] <target> [command]` — the target (URL or `@session`) always comes **before** the command.
+**CLI syntax:** `mcpc [options] [<@session>] [<command>]` — `connect` is a top-level command; session-based commands use `@session` before the command.
 
-- **Connect:** target is the URL, command is `connect @name` → `mcpc <url> connect @name`
+- **Connect:** `connect` is the command, followed by URL and session → `mcpc connect <url> @name`
 - **Call/list/close:** target is the session → `mcpc @name tools-call ...`, `mcpc @name close`
 
 Key details:

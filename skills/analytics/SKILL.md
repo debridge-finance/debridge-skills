@@ -137,41 +137,81 @@ All analytics MCPs are free and require no API key:
 
 ## Direct Balance Queries (No MCP Required)
 
-When no analytics MCP is connected, query balances directly using the signer/runtime detected in ../common/SKILL.md Phase 3. Route based on available tool:
+When no analytics MCP is connected, query balances directly using the signer/runtime detected during WALLET_DISCOVERY in ../common/SKILL.md. Route based on available tool:
 
-| Signer / Runtime      | Read this file                             |
+| Chain / Runtime       | Read this file                             |
 |-----------------------|--------------------------------------------|
-| ethers-viem / Node.js | [balance-ethers.md](balance-ethers.md)     |
-| foundry-cast          | [balance-cast.md](balance-cast.md)         |
-| web3py / Python       | [balance-web3py.md](balance-web3py.md)     |
+| EVM (ethers / viem)   | [balance-ethers.md](balance-ethers.md)     |
+| EVM (Foundry cast)    | [balance-cast.md](balance-cast.md)         |
+| Solana                | [balance-solana.md](balance-solana.md)     |
 | none                  | Install one: `npm install ethers` is fastest |
+
+### Auto-Discovery Balance Flow
+
+⚠️ **STOP — Do NOT ask the user for an address or chain.** When the user says "check my balance", "what's my balance", "show balances", or anything balance-related, skip all clarifying questions and immediately run discovery. This is the #1 anti-pattern: asking "which chain?" or "what address?" when the skill requires auto-discovery.
+
+The agent MUST:
+
+1. **Discover wallets FIRST** — run ALL applicable discovery methods and collect addresses:
+   - **OWS**: `ows wallet list` → parse EVM (`eip155:` lines) and Solana (`solana:` lines) addresses.
+   - **env-keys**: `node ../common/scripts/env-keys.mjs --json` → collect addresses from environment variables and `.env` files. This replaces ad-hoc shell commands like `test -n "$PRIVATE_KEY"` — always use the script.
+   - **Cast**: `cast wallet list` if Foundry is available.
+   - Do NOT ask the user for an address — discover it.
+2. **Query native balances** across ALL chains (both EVM and Solana if addresses exist for both). "All" is the default — never ask which chain.
+   - EVM: `node scripts/balance-evm.mjs <address> --all`
+   - Solana: `node scripts/balance-solana.mjs <address> --tokens`
+3. **Query ERC-20 token balances** — native balance scripts only report native tokens. For ERC-20/SPL discovery the agent MUST also use analytics MCPs. Try each in order until one succeeds:
+   - **Blockscout MCP** (preferred): call `mcp__blockscout__get_tokens_by_address` with `address` and `chain_id` (as string) for each major EVM chain (at minimum: `"1"`, `"56"`, `"137"`, `"42161"`, `"10"`, `"8453"`). Hosted at `https://mcp.blockscout.com/mcp` — no API key.
+   - **Hive Intelligence** (fallback): call `mcp__hive_portfolio__get_wallet_token_balances` with `id` = address and `is_all` = true. Hosted at `https://mcp.hiveintelligence.xyz/hive_portfolio_wallet/mcp` — no API key.
+   - **ethers.js `balanceOf`** (last resort): only if you already know specific token contract addresses from context. Cannot enumerate unknown tokens — skip if no addresses known.
+   - Do NOT report only native balances and stop. ERC-20 discovery is required when analytics MCPs are available.
+4. **Report results** for every wallet, every chain, both native and token balances. Group by chain for readability.
+
+### Bundled Scripts
+
+**Scripts accept only standard addresses — never wallet names.**
+
+```bash
+# EVM — pass a 0x address, query all deBridge EVM chains
+node scripts/balance-evm.mjs 0x000A5539cD9505b44575c56f929C657c73899c30 --all
+
+# EVM — pass a 0x address, query specific chains only
+node scripts/balance-evm.mjs 0x000A5539cD9505b44575c56f929C657c73899c30 --chains 1,137,42161
+
+# EVM — query a specific ERC-20 token balance (e.g., USDC on Polygon)
+node scripts/balance-evm.mjs 0x000A5539cD9505b44575c56f929C657c73899c30 --chains 137 --token 0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359
+
+# Solana — pass a base58 address, query native SOL + SPL tokens
+node scripts/balance-solana.mjs B7Z1whe4TX3tVXwb93Nsd9U4f4QZfnuzm5DyUnKxVSUr --tokens
+
+# JSON output for piping
+node scripts/balance-evm.mjs 0x000A5539cD9505b44575c56f929C657c73899c30 --all --json
+node scripts/balance-solana.mjs B7Z1whe4TX3tVXwb93Nsd9U4f4QZfnuzm5DyUnKxVSUr --tokens --json
+```
+
+**Arguments:**
+- First argument: a standard blockchain address (EVM `0x` hex, 42 chars; or Solana base58, 32-44 chars). **Required.**
+- `--all`: (EVM only) query all deBridge-supported EVM chains.
+- `--chains <ids>`: (EVM only) comma-separated chain IDs.
+- `--token <addr>`: (EVM only) query a specific ERC-20 token balance instead of native balance. Reads decimals and symbol on-chain.
+- `--tokens`: (Solana only) also list non-zero SPL token balances.
+- `--json`: output as JSON.
+
+**Do NOT pass OWS wallet names, ENS names, or any non-address string.** Resolve addresses first via WALLET_DISCOVERY, then pass the resolved address to the script.
 
 All direct query methods require an RPC endpoint. Resolve RPCs in this order:
 1. Environment variable (`$RPC_URL`, `$ETH_RPC_URL`).
 2. User-provided URL.
 3. Discover from Chainlist — read ../common/rpc-discovery.md.
 
-**Bundled scripts** (in `../common/scripts/`) provide a faster path when Node.js is available:
-
-```bash
-npx tsx ../common/scripts/balance.ts 0xAddr 1 42161 8453          # native balance on 3 chains
-npx tsx ../common/scripts/balance.ts 0xAddr 42161 --token 0xUSDC  # ERC-20 balance
-npx tsx ../common/scripts/balance.ts --derive 1 42161 8453        # derive address from $PRIVATE_KEY, then query
-```
-
-These scripts auto-discover RPCs from Chainlist and support `--json` output.
-
-### Deriving Address from Private Key
-
-If only `PRIVATE_KEY` is available and no address is known, each reference file includes a "Deriving Address" section. The address must be derived before any balance query.
-
 ### When to Use Direct Queries vs MCP
 
 | Scenario | Use |
 |----------|-----|
-| Quick balance check, one chain | Direct query — no setup overhead |
-| Multi-chain scan, native only | Direct query — parallel RPC calls |
-| No API key, no MCP | Direct query — only needs a public RPC |
+| Native balances, multi-chain | Bundled script (`balance-evm.mjs --all`) — parallel RPC calls |
+| ERC-20 token discovery | Blockscout MCP `get_tokens_by_address` — enumerates all tokens without knowing addresses |
+| Full portfolio ("check my balance") | **Both**: bundled script for native + Blockscout/Hive MCP for ERC-20 tokens |
+| No MCP available at all | Bundled script for native only — warn user that ERC-20 tokens are not shown |
 
 ---
 

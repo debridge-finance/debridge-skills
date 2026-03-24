@@ -1,0 +1,180 @@
+#!/usr/bin/env node
+//
+// deBridge EVM Bridge — sign and broadcast a create_tx response via OWS
+//
+// Usage:
+//   echo '<create_tx JSON>' | node debridge-evm-bridge.mjs <wallet_name> [--src-chain <id>] [--rpc <url>] [--json]
+//
+// The script reads a deBridge create_tx JSON response from stdin.
+// The agent calls MCP to get the quote, then pipes it here for signing.
+//
+// Example:
+//   npx -y @apify/mcpc @debridge tools-call create_tx '...' | node debridge-evm-bridge.mjs default --src-chain 137
+//
+// Requires:
+//   npm install ethers
+//   ows CLI installed (~/.local/bin/ows)
+
+import { ethers } from "ethers";
+import { execSync } from "child_process";
+import { getRpc } from "../../common/scripts/rpc.mjs";
+
+// ---------------------------------------------------------------------------
+// Parse CLI
+// ---------------------------------------------------------------------------
+const args = process.argv.slice(2);
+const flags = {};
+const positional = [];
+
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === "--src-chain" && args[i + 1]) flags.srcChain = args[++i];
+  else if (args[i] === "--rpc" && args[i + 1]) flags.rpc = args[++i];
+  else if (args[i] === "--json") flags.json = true;
+  else if (!args[i].startsWith("--")) positional.push(args[i]);
+  else { console.error(`Unknown flag: ${args[i]}`); process.exit(1); }
+}
+
+if (positional.length < 1) {
+  console.error("Usage: echo '<create_tx JSON>' | node debridge-evm-bridge.mjs <wallet_name> [--src-chain <id>] [--rpc <url>] [--json]");
+  process.exit(1);
+}
+
+const walletName = positional[0];
+const srcChain = flags.srcChain || "1";
+
+// ---------------------------------------------------------------------------
+// Read create_tx response from stdin
+// ---------------------------------------------------------------------------
+let stdinData = "";
+const chunks = [];
+for await (const chunk of process.stdin) {
+  chunks.push(chunk);
+}
+stdinData = Buffer.concat(chunks).toString("utf8");
+
+// Extract JSON from mcpc ```` markers if present, otherwise parse directly
+const mcpcMatch = stdinData.match(/````\n([\s\S]*?)\n````/);
+const jsonStr = mcpcMatch ? mcpcMatch[1] : stdinData.trim();
+const quote = JSON.parse(jsonStr);
+
+if (quote.message || quote.code) {
+  console.error("deBridge error:", quote.message || JSON.stringify(quote));
+  process.exit(1);
+}
+
+const est = quote.estimation.dstChainTokenOut;
+const estAmount = Number(est.amount) / Math.pow(10, est.decimals);
+console.log(`Estimated output: ${estAmount.toFixed(4)} ${est.symbol} (~$${est.approximateUsdValue.toFixed(2)})`);
+console.log("Order ID:", quote.orderId);
+
+// ---------------------------------------------------------------------------
+// Resolve source address from OWS wallet
+// ---------------------------------------------------------------------------
+const walletInfo = execSync(
+  `${process.env.HOME}/.local/bin/ows wallet list`,
+  { encoding: "utf8" }
+);
+const evmMatch = walletInfo.match(/eip155:1\s+→\s+(0x[0-9a-fA-F]{40})/);
+if (!evmMatch) {
+  console.error("No EVM address found in OWS wallet");
+  process.exit(1);
+}
+const srcAddress = evmMatch[1];
+console.log("Source address:", srcAddress);
+
+// ---------------------------------------------------------------------------
+// Helpers: sign and broadcast a single EVM transaction
+// ---------------------------------------------------------------------------
+const rpcUrl = flags.rpc || await getRpc(Number(srcChain));
+const provider = new ethers.JsonRpcProvider(rpcUrl);
+const chainId = Number(srcChain);
+
+async function signAndBroadcast(txData, label) {
+  console.log(`\n--- ${label} ---`);
+
+  // Fetch nonce and fee data
+  const [nonce, feeData] = await Promise.all([
+    provider.getTransactionCount(srcAddress, "pending"),
+    provider.getFeeData(),
+  ]);
+
+  // Build unsigned EIP-1559 transaction
+  const unsignedTx = ethers.Transaction.from({
+    type: 2,
+    chainId,
+    to: txData.to,
+    data: txData.data,
+    value: BigInt(txData.value || "0"),
+    nonce,
+    maxFeePerGas: feeData.maxFeePerGas,
+    maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+    gasLimit: 900000n,
+  });
+
+  // Serialize unsigned tx, strip 0x prefix
+  const unsignedHex = unsignedTx.unsignedSerialized.replace(/^0x/, "");
+
+  // Sign with OWS CLI
+  console.log("Signing with OWS...");
+  const signRaw = execSync(
+    `${process.env.HOME}/.local/bin/ows sign tx --chain eip155:${chainId} --wallet ${walletName} --tx ${unsignedHex} --json`,
+    { encoding: "utf8" }
+  );
+  const signResult = JSON.parse(signRaw);
+
+  // Extract r, s, v from OWS signature
+  // OWS returns {signature: "<128-char hex>", recovery_id: 0|1}
+  const sigHex = signResult.signature;
+  const r = "0x" + sigHex.slice(0, 64);
+  const s = "0x" + sigHex.slice(64, 128);
+  const v = signResult.recovery_id;
+
+  // Attach signature to transaction
+  unsignedTx.signature = ethers.Signature.from({ r, s, v });
+
+  // Broadcast
+  console.log("Broadcasting...");
+  const txResp = await provider.broadcastTransaction(unsignedTx.serialized);
+  console.log("Transaction hash:", txResp.hash);
+
+  // Wait for 1 confirmation
+  console.log("Waiting for confirmation...");
+  const receipt = await txResp.wait(1);
+  console.log("Confirmed in block:", receipt.blockNumber);
+  console.log("Status:", receipt.status === 1 ? "success" : "reverted");
+
+  return receipt;
+}
+
+// ---------------------------------------------------------------------------
+// If there is an approveTx, sign and send it first
+// ---------------------------------------------------------------------------
+if (quote.approveTx) {
+  console.log("\nToken approval required — sending approve transaction first.");
+  const approveReceipt = await signAndBroadcast(quote.approveTx, "Approve");
+  if (approveReceipt.status !== 1) {
+    console.error("Approve transaction reverted. Aborting.");
+    process.exit(1);
+  }
+  console.log("Approval confirmed. Proceeding to bridge transaction.");
+}
+
+// ---------------------------------------------------------------------------
+// Sign and broadcast the bridge transaction
+// ---------------------------------------------------------------------------
+const bridgeReceipt = await signAndBroadcast(quote.tx, "Bridge");
+
+// ---------------------------------------------------------------------------
+// Output
+// ---------------------------------------------------------------------------
+if (flags.json) {
+  console.log(JSON.stringify({
+    hash: bridgeReceipt.hash,
+    blockNumber: bridgeReceipt.blockNumber,
+    status: bridgeReceipt.status === 1 ? "success" : "reverted",
+    orderId: quote.orderId,
+  }, null, 2));
+} else {
+  console.log("\nBridge transaction complete.");
+  console.log("Order ID:", quote.orderId);
+}

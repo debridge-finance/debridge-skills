@@ -2,15 +2,16 @@
 name: debridge-signing
 description: >
   Sign and broadcast deBridge transactions. Routes to the correct signing
-  method based on the detected signer: private key with ethers/viem, Foundry
-  cast, browser wallet (MetaMask), web3.py, or Privy embedded wallet. Use
-  this skill whenever a deBridge transaction needs to be signed and sent
-  on-chain — including bridge transactions, swap transactions, and token
-  approvals. Also use when the user asks "how do I sign this transaction",
-  "send the transaction", "approve the token", "broadcast to chain", or
-  needs help with EIP-712 typed data signing. This skill is called
-  automatically by the bridge and swap workflows, but can also be used
-  standalone for signing guidance.
+  method based on the detected signer: OWS local self-custody wallet,
+  private key with ethers/viem, Foundry cast, browser wallet (MetaMask),
+  or Privy embedded wallet. Use this skill whenever a deBridge transaction
+  needs to be signed and sent on-chain — including bridge transactions, swap
+  transactions, and token approvals. Also use when the user asks "how do I
+  sign this transaction", "send the transaction", "approve the token",
+  "broadcast to chain", "sign with OWS", "ows wallet", or needs help with
+  EIP-712 typed data signing. This skill is called automatically by the
+  bridge and swap workflows, but can also be used standalone for signing
+  guidance.
 license: MIT
 metadata:
   author: deBridge
@@ -25,10 +26,10 @@ PREREQUISITE: Read ../common/SKILL.md for environment detection, auth, and chain
 
 | Want to...                        | Go to                              |
 |-----------------------------------|------------------------------------|
+| Sign with OWS (recommended)       | [ows-signing.md](ows-signing.md)  |
 | Sign with ethers.js or viem       | [sdk-signer.md](sdk-signer.md)    |
 | Sign with Foundry cast            | [foundry-cast.md](foundry-cast.md)|
 | Sign with MetaMask / browser      | [metamask.md](metamask.md)        |
-| Sign with Python web3.py          | [web3py.md](web3py.md)            |
 | Sign via Privy MCP                | [privy-mcp.md](privy-mcp.md)      |
 | Set up a wallet from scratch      | ../wallets/SKILL.md               |
 
@@ -43,17 +44,16 @@ Both are standard `{to, data, value, chainId}` objects. Sign and broadcast to th
 
 ## Signer Routing
 
-Use the `Signer` value from common Phase 3 to select the right reference:
+Use the `Signer` value from WALLET_DISCOVERY to select the right reference:
 
 | Signer value    | Environment    | Read this file                       |
 |-----------------|----------------|--------------------------------------|
+| ows             | CLI            | [ows-signing.md](ows-signing.md)    |
 | env-privkey     | CLI + Node.js  | [sdk-signer.md](sdk-signer.md)      |
 | env-privkey     | CLI + cast     | [foundry-cast.md](foundry-cast.md)  |
-| env-privkey     | CLI + Python   | [web3py.md](web3py.md)              |
 | foundry-cast    | CLI            | [foundry-cast.md](foundry-cast.md)  |
 | browser-wallet  | Browser        | [metamask.md](metamask.md)          |
 | ethers-viem     | CLI / Headless | [sdk-signer.md](sdk-signer.md)      |
-| web3py          | CLI / Headless | [web3py.md](web3py.md)              |
 | mcp-wallet      | Any            | [privy-mcp.md](privy-mcp.md)        |
 | none            | Any            | ../wallets/SKILL.md — set up first  |
 
@@ -63,8 +63,7 @@ When Signer = `env-privkey`, a private key exists but a signing library is still
 
 1. Node.js + ethers or viem installed → [sdk-signer.md](sdk-signer.md)
 2. `cast` available → [foundry-cast.md](foundry-cast.md)
-3. Python + web3 installed → [web3py.md](web3py.md)
-4. None of the above → install one: `npm install ethers` is the fastest path.
+3. None of the above → install one: `npm install ethers` is the fastest path.
 
 ## Transaction Flow
 
@@ -91,10 +90,10 @@ For cross-chain bridges, pass the tx hash and order ID to ../swap/monitoring.md 
 ## RPC Endpoints
 
 Most signers need an RPC connection to the source chain:
+- OWS: for EVM, `ows sign tx` handles signing locally — broadcast via RPC separately; for Solana, set `SOLANA_RPC_URL` or use the default public RPC
 - ethers/viem: pass RPC URL to provider constructor
 - cast: use `--rpc-url` flag
 - browser wallet: uses the wallet's connected RPC
-- web3.py: pass RPC URL to `Web3(HTTPProvider(url))`
 - Privy MCP: handles RPC internally — no RPC URL needed from the agent
 
 Use public RPCs or the user's configured RPC. Prefer user-provided RPCs or environment variables (`$ETH_RPC_URL`, `$RPC_URL`) over hardcoded defaults. The balance query skills include public RPCs as fallback defaults — override them when the user has configured RPCs.
@@ -112,8 +111,8 @@ For programmatic RPC discovery from Chainlist, read ../common/rpc-discovery.md.
 
 ## References
 
+- [ows-signing.md](ows-signing.md) — OWS local self-custody signing (EVM, Solana, Tron)
 - [sdk-signer.md](sdk-signer.md) — ethers.js and viem signing
 - [foundry-cast.md](foundry-cast.md) — Foundry cast CLI signing
 - [metamask.md](metamask.md) — Browser wallet signing
-- [web3py.md](web3py.md) — Python web3.py signing
 - [privy-mcp.md](privy-mcp.md) — Privy embedded wallet signing via MCP

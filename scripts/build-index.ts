@@ -115,7 +115,7 @@ function main(): void {
     const scriptsDir = join(skillDir, "scripts");
     const scripts = existsSync(scriptsDir) && statSync(scriptsDir).isDirectory()
       ? readdirSync(scriptsDir)
-          .filter((f) => f.endsWith(".ts") || f.endsWith(".js") || f.endsWith(".py") || f.endsWith(".sh"))
+          .filter((f) => f.endsWith(".ts") || f.endsWith(".js") || f.endsWith(".mjs") || f.endsWith(".py") || f.endsWith(".sh"))
           .sort()
           .map((f) => `skills/${dirName}/scripts/${f}`)
       : [];
