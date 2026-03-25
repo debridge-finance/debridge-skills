@@ -20,6 +20,12 @@ Analyze execution failures and user corrections, determine the root cause, and t
 - The agent skipped a prescribed step or used the wrong tool
 - The agent asked the user for information it should have auto-discovered
 
+## What to ignore
+
+- issues with RPCs or external services that are out of scope for this repo's skills and scripts
+- user errors (e.g., providing wrong token address)
+- expected failures due to insufficient balance, missing approvals, or other preconditions not met during testing (these don't require skill changes)
+
 ## Diagnosis Process
 
 ### Step 1: Identify What Went Wrong

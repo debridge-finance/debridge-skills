@@ -84,7 +84,8 @@ try {
 }
 
 // Extract EVM address scoped to the requested wallet name and any eip155 chain
-const walletSection = walletInfo.split(/\n(?=ID:)/).find((s) => new RegExp(`Name:\\s+${walletName}\\b`).test(s));
+const escapedName = walletName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const walletSection = walletInfo.split(/\n(?=ID:)/).find((s) => new RegExp(`Name:\\s+${escapedName}\\b`).test(s));
 if (!walletSection) {
   console.error(`Wallet "${walletName}" not found in OWS wallet list`);
   process.exit(1);
@@ -115,18 +116,27 @@ async function signAndBroadcast(txData, label) {
     provider.getFeeData(),
   ]);
 
-  // Build unsigned EIP-1559 transaction
-  const unsignedTx = ethers.Transaction.from({
-    type: 2,
+  // Build unsigned transaction — use EIP-1559 if supported, legacy otherwise
+  const supportsEip1559 = feeData.maxFeePerGas != null;
+  const txFields = {
     chainId,
     to: txData.to,
     data: txData.data,
     value: BigInt(txData.value || "0"),
     nonce,
-    maxFeePerGas: feeData.maxFeePerGas,
-    maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
     gasLimit: 900000n,
-  });
+  };
+
+  if (supportsEip1559) {
+    txFields.type = 2;
+    txFields.maxFeePerGas = feeData.maxFeePerGas;
+    txFields.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+  } else {
+    txFields.type = 0;
+    txFields.gasPrice = feeData.gasPrice;
+  }
+
+  const unsignedTx = ethers.Transaction.from(txFields);
 
   // Serialize unsigned tx, strip 0x prefix
   const unsignedHex = unsignedTx.unsignedSerialized.replace(/^0x/, "");

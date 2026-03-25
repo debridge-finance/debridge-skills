@@ -56,7 +56,8 @@ try {
   process.exit(1);
 }
 
-const walletSection = walletInfo.split(/\n(?=ID:)/).find((s) => new RegExp(`Name:\\s+${walletName}\\b`).test(s));
+const escapedName = walletName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const walletSection = walletInfo.split(/\n(?=ID:)/).find((s) => new RegExp(`Name:\\s+${escapedName}\\b`).test(s));
 if (!walletSection) {
   console.error(`Wallet "${walletName}" not found`);
   process.exit(1);
@@ -103,17 +104,26 @@ const [nonce, feeData] = await Promise.all([
 
 const approveData = erc20Iface.encodeFunctionData("approve", [spenderAddr, approveAmount]);
 
-const unsignedTx = ethers.Transaction.from({
-  type: 2,
+const supportsEip1559 = feeData.maxFeePerGas != null;
+const txFields = {
   chainId,
   to: tokenAddr,
   data: approveData,
   value: 0n,
   nonce,
-  maxFeePerGas: feeData.maxFeePerGas,
-  maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
   gasLimit: 100000n,
-});
+};
+
+if (supportsEip1559) {
+  txFields.type = 2;
+  txFields.maxFeePerGas = feeData.maxFeePerGas;
+  txFields.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+} else {
+  txFields.type = 0;
+  txFields.gasPrice = feeData.gasPrice;
+}
+
+const unsignedTx = ethers.Transaction.from(txFields);
 
 const unsignedHex = unsignedTx.unsignedSerialized.replace(/^0x/, "");
 
