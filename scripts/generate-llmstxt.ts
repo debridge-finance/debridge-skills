@@ -21,18 +21,37 @@ interface Skill {
   entryPoint: string;
   body: string;
   refs: RefFile[];
+  scripts: string[];
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 const SKILLS_DIR = join(process.cwd(), "skills");
 const LLMS_PATH = join(process.cwd(), "llms.txt");
+const BASE_URI = "https://agents.debridge.com";
 
-const HEADER = "# deBridge Agent Skills";
+const HEADER = "# deBridge Agent Skills & MCP Server";
 const SUMMARY = [
-  "> Cross-chain DeFi agent skills for bridging, swapping, signing, and",
-  "> monitoring across 20+ EVM chains and Solana. Use with deBridge MCP",
-  "> server, SDK, or CLI.",
+  "> Agent skills and MCP server for cross-chain DeFi — bridging, swapping,",
+  "> signing, and monitoring across 20+ EVM chains and Solana.",
+].join("\n");
+
+const MCP_SECTION = [
+  "## MCP Server",
+  "",
+  "Connect to the deBridge MCP endpoint — no install required:",
+  "",
+  "```",
+  "https://agents.debridge.com/mcp",
+  "```",
+].join("\n");
+
+const INSTALL_SECTION = [
+  "## Install Skills",
+  "",
+  "```",
+  "npx skills add debridge-finance/debridge-skills",
+  "```",
 ].join("\n");
 
 function parseFrontmatter(content: string): { frontmatter: Frontmatter; body: string } {
@@ -163,6 +182,12 @@ function discoverSkills(): Skill[] {
       });
     }
 
+    // Discover scripts
+    const scriptsDir = join(skillDir, "scripts");
+    const scripts: string[] = existsSync(scriptsDir) && statSync(scriptsDir).isDirectory()
+      ? readdirSync(scriptsDir).filter((f) => /\.(mjs|js|ts)$/.test(f)).sort()
+      : [];
+
     skills.push({
       dirName,
       name: frontmatter.name,
@@ -170,6 +195,7 @@ function discoverSkills(): Skill[] {
       entryPoint: `skills/${dirName}/SKILL.md`,
       body,
       refs,
+      scripts,
     });
 
     console.log(`  ✓ ${dirName} (${refs.length} reference${refs.length !== 1 ? "s" : ""})`);
@@ -187,24 +213,32 @@ function generateLlmsTxt(skills: Skill[]): string {
   lines.push("");
   lines.push(SUMMARY);
   lines.push("");
-
-  // Skills section
-  lines.push("## Skills");
+  lines.push(MCP_SECTION);
   lines.push("");
+  lines.push(INSTALL_SECTION);
+  lines.push("");
+  lines.push("");
+
+  // On-demand fetch fallback
+  lines.push("## On-Demand Fetch (fallback)");
+  lines.push("");
+  lines.push("For clients without a shell or JS environment, fetch skills directly by URL.");
+  lines.push(`Base URI: \`${BASE_URI}\``);
+  lines.push("");
+
   for (const s of skills) {
     const desc = truncateDescription(s.description);
-    lines.push(`- [${s.name}](${s.entryPoint}): ${desc}`);
-  }
-  lines.push("");
-
-  // Optional section — all reference files
-  const allRefs = skills.flatMap((s) => s.refs);
-  if (allRefs.length > 0) {
-    lines.push("## Optional");
+    lines.push(`### ${s.name}`);
     lines.push("");
-    for (const s of skills) {
-      for (const ref of s.refs) {
-        lines.push(`- [${ref.title}](${ref.path})`);
+    lines.push(`- [${s.name}](${BASE_URI}/${s.entryPoint}): ${desc}`);
+    for (const ref of s.refs) {
+      lines.push(`- [${ref.title}](${BASE_URI}/${ref.path})`);
+    }
+    if (s.scripts.length > 0) {
+      lines.push("");
+      lines.push("Scripts:");
+      for (const script of s.scripts) {
+        lines.push(`- ${BASE_URI}/skills/${s.dirName}/scripts/${script}`);
       }
     }
     lines.push("");

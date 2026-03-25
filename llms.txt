@@ -1,37 +1,86 @@
-# deBridge Agent Skills
+# deBridge Agent Skills & MCP Server
 
-> Cross-chain DeFi agent skills for bridging, swapping, signing, and
-> monitoring across 20+ EVM chains and Solana. Use with deBridge MCP
-> server, SDK, or CLI.
+> Agent skills and MCP server for cross-chain DeFi — bridging, swapping,
+> signing, and monitoring across 20+ EVM chains and Solana.
 
-## Skills
+## MCP Server
 
-- [debridge-common](skills/common/SKILL.md): Shared prerequisite for all deBridge agent skills.
-- [debridge-analytics](skills/analytics/SKILL.md): Query DeFi analytics and on-chain data from third-party MCP servers to make informed bridging and swapping decisions.
-- [debridge-signing](skills/signing/SKILL.md): Sign and broadcast deBridge transactions.
-- [debridge-swap](skills/swap/SKILL.md): Execute token swaps, bridges, and cross-chain transfers via deBridge DLN.
-- [debridge-wallets](skills/wallets/SKILL.md): Set up a wallet for deBridge transactions.
+Connect to the deBridge MCP endpoint — no install required:
 
-## Optional
+```
+https://agents.debridge.com/mcp
+```
 
-- [MCP Server Configuration by Environment](skills/common/mcp-setup.md)
-- [Supported Chains and Token Configuration](skills/common/chain-config.md)
-- [RPC Endpoint Discovery via Chainlist](skills/common/rpc-discovery.md)
-- [MCP Tool Calls via CLI (mcpc)](skills/common/mcpc-usage.md)
-- [Skill Freshness Check](skills/common/skill-freshness.md)
-- [Token Prices and Market Data](skills/analytics/token-prices.md)
-- [On-Chain Explorer — Address, Transaction, Contract, Portfolio](skills/analytics/onchain-explorer.md)
-- [DeFi Protocol Analytics — TVL, Fees, Yields, Vault Risk](skills/analytics/defi-tvl.md)
-- [DEX Pool Analytics — Liquidity, OHLCV, Trades](skills/analytics/dex-pools.md)
-- [Balance Queries with ethers.js and viem](skills/analytics/balance-ethers.md)
-- [Balance Queries with Foundry Cast](skills/analytics/balance-cast.md)
-- [Balance Queries on Solana](skills/analytics/balance-solana.md)
-- [deBridge Signing with OWS (Open Wallet Standard)](skills/signing/ows-signing.md)
-- [Signing with ethers.js or viem](skills/signing/sdk-signer.md)
-- [Signing with Foundry Cast](skills/signing/foundry-cast.md)
-- [Browser Wallet Signing (MetaMask / EIP-1193)](skills/signing/metamask.md)
-- [Signing via Privy MCP](skills/signing/privy-mcp.md)
-- [Preflight Checks](skills/swap/preflight.md)
-- [Order Monitoring and Fulfillment Tracking](skills/swap/monitoring.md)
-- [Privy Embedded Wallet Setup](skills/wallets/privy-embedded.md)
-- [deBridge Signing with OWS (Open Wallet Standard)](skills/wallets/ows-signing.md)
+## Install Skills
+
+```
+npx skills add debridge-finance/debridge-skills
+```
+
+
+## On-Demand Fetch (fallback)
+
+For clients without a shell or JS environment, fetch skills directly by URL.
+Base URI: `https://agents.debridge.com`
+
+### debridge-common
+
+- [debridge-common](https://agents.debridge.com/skills/common/SKILL.md): Shared prerequisite for all deBridge agent skills.
+- [MCP Server Configuration by Environment](https://agents.debridge.com/skills/common/mcp-setup.md)
+- [Supported Chains and Token Configuration](https://agents.debridge.com/skills/common/chain-config.md)
+- [RPC Endpoint Discovery via Chainlist](https://agents.debridge.com/skills/common/rpc-discovery.md)
+- [MCP Tool Calls via CLI (mcpc)](https://agents.debridge.com/skills/common/mcpc-usage.md)
+- [Skill Freshness Check](https://agents.debridge.com/skills/common/skill-freshness.md)
+
+Scripts:
+- https://agents.debridge.com/skills/common/scripts/allowance.ts
+- https://agents.debridge.com/skills/common/scripts/approve.ts
+- https://agents.debridge.com/skills/common/scripts/b58.mjs
+- https://agents.debridge.com/skills/common/scripts/balance.ts
+- https://agents.debridge.com/skills/common/scripts/convert-amount.ts
+- https://agents.debridge.com/skills/common/scripts/env-keys.mjs
+- https://agents.debridge.com/skills/common/scripts/erc20.ts
+- https://agents.debridge.com/skills/common/scripts/rpc.mjs
+- https://agents.debridge.com/skills/common/scripts/rpc.ts
+
+### debridge-analytics
+
+- [debridge-analytics](https://agents.debridge.com/skills/analytics/SKILL.md): Query DeFi analytics and on-chain data from third-party MCP servers to make informed bridging and swapping decisions.
+- [Token Prices and Market Data](https://agents.debridge.com/skills/analytics/token-prices.md)
+- [On-Chain Explorer — Address, Transaction, Contract, Portfolio](https://agents.debridge.com/skills/analytics/onchain-explorer.md)
+- [DeFi Protocol Analytics — TVL, Fees, Yields, Vault Risk](https://agents.debridge.com/skills/analytics/defi-tvl.md)
+- [DEX Pool Analytics — Liquidity, OHLCV, Trades](https://agents.debridge.com/skills/analytics/dex-pools.md)
+- [Balance Queries with ethers.js and viem](https://agents.debridge.com/skills/analytics/balance-ethers.md)
+- [Balance Queries with Foundry Cast](https://agents.debridge.com/skills/analytics/balance-cast.md)
+- [Balance Queries on Solana](https://agents.debridge.com/skills/analytics/balance-solana.md)
+
+Scripts:
+- https://agents.debridge.com/skills/analytics/scripts/balance-evm.mjs
+- https://agents.debridge.com/skills/analytics/scripts/balance-solana.mjs
+
+### debridge-signing
+
+- [debridge-signing](https://agents.debridge.com/skills/signing/SKILL.md): Sign and broadcast deBridge transactions.
+- [deBridge Signing with OWS (Open Wallet Standard)](https://agents.debridge.com/skills/signing/ows-signing.md)
+- [Signing with ethers.js or viem](https://agents.debridge.com/skills/signing/sdk-signer.md)
+- [Signing with Foundry Cast](https://agents.debridge.com/skills/signing/foundry-cast.md)
+- [Browser Wallet Signing (MetaMask / EIP-1193)](https://agents.debridge.com/skills/signing/metamask.md)
+- [Signing via Privy MCP](https://agents.debridge.com/skills/signing/privy-mcp.md)
+
+Scripts:
+- https://agents.debridge.com/skills/signing/scripts/debridge-evm-bridge.mjs
+- https://agents.debridge.com/skills/signing/scripts/debridge-solana-bridge.mjs
+- https://agents.debridge.com/skills/signing/scripts/erc20-approve.mjs
+- https://agents.debridge.com/skills/signing/scripts/ows-solana-sign.mjs
+
+### debridge-swap
+
+- [debridge-swap](https://agents.debridge.com/skills/swap/SKILL.md): Execute token swaps, bridges, and cross-chain transfers via deBridge DLN.
+- [Preflight Checks](https://agents.debridge.com/skills/swap/preflight.md)
+- [Order Monitoring and Fulfillment Tracking](https://agents.debridge.com/skills/swap/monitoring.md)
+
+### debridge-wallets
+
+- [debridge-wallets](https://agents.debridge.com/skills/wallets/SKILL.md): Set up a wallet for deBridge transactions.
+- [Privy Embedded Wallet Setup](https://agents.debridge.com/skills/wallets/privy-embedded.md)
+- [deBridge Signing with OWS (Open Wallet Standard)](https://agents.debridge.com/skills/wallets/ows-signing.md)
