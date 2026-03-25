@@ -13,10 +13,10 @@
 //
 // Requires:
 //   npm install ethers
-//   ows CLI installed (~/.local/bin/ows)
+//   ows CLI on PATH (or set OWS_CLI_PATH env var)
 
 import { ethers } from "ethers";
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import { getRpc } from "../../common/scripts/rpc.mjs";
 
 // ---------------------------------------------------------------------------
@@ -52,10 +52,8 @@ for await (const chunk of process.stdin) {
 }
 stdinData = Buffer.concat(chunks).toString("utf8");
 
-// Extract JSON from mcpc ```` markers if present, otherwise parse directly
-const mcpcMatch = stdinData.match(/````\n([\s\S]*?)\n````/);
-const jsonStr = mcpcMatch ? mcpcMatch[1] : stdinData.trim();
-const quote = JSON.parse(jsonStr);
+// Expect plain create_tx JSON on stdin (agent parses MCP response before piping)
+const quote = JSON.parse(stdinData.trim());
 
 if (quote.message || quote.code) {
   console.error("deBridge error:", quote.message || JSON.stringify(quote));
@@ -64,23 +62,42 @@ if (quote.message || quote.code) {
 
 const est = quote.estimation.dstChainTokenOut;
 const estAmount = Number(est.amount) / Math.pow(10, est.decimals);
-console.log(`Estimated output: ${estAmount.toFixed(4)} ${est.symbol} (~$${est.approximateUsdValue.toFixed(2)})`);
-console.log("Order ID:", quote.orderId);
+if (!flags.json) {
+  console.log(`Estimated output: ${estAmount.toFixed(4)} ${est.symbol} (~$${est.approximateUsdValue.toFixed(2)})`);
+  console.log("Order ID:", quote.orderId);
+}
 
 // ---------------------------------------------------------------------------
 // Resolve source address from OWS wallet
 // ---------------------------------------------------------------------------
-const walletInfo = execSync(
-  `${process.env.HOME}/.local/bin/ows wallet list`,
-  { encoding: "utf8" }
-);
-const evmMatch = walletInfo.match(/eip155:1\s+→\s+(0x[0-9a-fA-F]{40})/);
+const owsCmd = process.env.OWS_CLI_PATH || "ows";
+let walletInfo;
+try {
+  walletInfo = execFileSync(owsCmd, ["wallet", "list"], { encoding: "utf8" });
+} catch (err) {
+  if (err && err.code === "ENOENT") {
+    console.error("ows CLI not found. Please ensure 'ows' is on your PATH or set OWS_CLI_PATH to its full path.");
+  } else {
+    console.error("Failed to execute 'ows wallet list':", err.stderr?.toString() || err.message || err);
+  }
+  process.exit(1);
+}
+
+// Extract EVM address scoped to the requested wallet name and any eip155 chain
+const walletSection = walletInfo.split(/\n(?=ID:)/).find((s) => new RegExp(`Name:\\s+${walletName}\\b`).test(s));
+if (!walletSection) {
+  console.error(`Wallet "${walletName}" not found in OWS wallet list`);
+  process.exit(1);
+}
+const evmMatch = walletSection.match(/eip155:\d+\s+→\s+(0x[0-9a-fA-F]{40})/);
 if (!evmMatch) {
-  console.error("No EVM address found in OWS wallet");
+  console.error(`No EVM address found for wallet "${walletName}"`);
   process.exit(1);
 }
 const srcAddress = evmMatch[1];
-console.log("Source address:", srcAddress);
+if (!flags.json) {
+  console.log("Source address:", srcAddress);
+}
 
 // ---------------------------------------------------------------------------
 // Helpers: sign and broadcast a single EVM transaction
@@ -116,10 +133,13 @@ async function signAndBroadcast(txData, label) {
 
   // Sign with OWS CLI
   console.log("Signing with OWS...");
-  const signRaw = execSync(
-    `${process.env.HOME}/.local/bin/ows sign tx --chain eip155:${chainId} --wallet ${walletName} --tx ${unsignedHex} --json`,
-    { encoding: "utf8" }
-  );
+  const signRaw = execFileSync(owsCmd, [
+    "sign", "tx",
+    "--chain", `eip155:${chainId}`,
+    "--wallet", walletName,
+    "--tx", unsignedHex,
+    "--json",
+  ], { encoding: "utf8" });
   const signResult = JSON.parse(signRaw);
 
   // Extract r, s, v from OWS signature

@@ -3,7 +3,7 @@
 // Solana Balance Checker
 //
 // Queries native SOL balance and optionally all SPL token balances for a
-// given Solana address or OWS wallet name. Uses only Node.js built-ins
+// given Solana base58 address. Uses only Node.js built-ins
 // and the global fetch() API — no external dependencies.
 //
 // Usage:

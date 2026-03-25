@@ -48,6 +48,7 @@
 
 import { signMessage } from "@open-wallet-standard/core";
 import { getRpc } from "../../common/scripts/rpc.mjs";
+import { b58decode } from "../../common/scripts/b58.mjs";
 
 // ---------------------------------------------------------------------------
 // Parse CLI arguments
@@ -96,8 +97,20 @@ if (tx[0] !== 0x01) {
   process.exit(1);
 }
 
+if (tx.length < 70) {
+  console.error(`Transaction too short for expected V0 layout: length=${tx.length}, expected at least 70 bytes`);
+  process.exit(1);
+}
+
 const numKeys = tx[69];
 const blockhashOffset = 70 + numKeys * 32;
+
+if (blockhashOffset + 32 > tx.length) {
+  console.error(
+    `Transaction too short for expected V0 layout: blockhash would end at offset ${blockhashOffset + 32}, but tx length is ${tx.length}`,
+  );
+  process.exit(1);
+}
 
 // ---------------------------------------------------------------------------
 // Step 1: Fetch a fresh blockhash from Solana RPC
@@ -121,38 +134,23 @@ if (bhResp.error) {
   process.exit(1);
 }
 
-// Decode the base58 blockhash into 32 raw bytes.
-// Inline implementation to avoid adding a dependency — the OWS SDK does not
-// export base58 utilities and we only need decode for a single 32-byte value.
-const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-function b58decode(str) {
-  const bytes = [0];
-  for (const c of str) {
-    let carry = ALPHABET.indexOf(c);
-    for (let j = 0; j < bytes.length; j++) {
-      carry += bytes[j] * 58;
-      bytes[j] = carry & 0xff;
-      carry >>= 8;
-    }
-    while (carry > 0) {
-      bytes.push(carry & 0xff);
-      carry >>= 8;
-    }
-  }
-  for (const c of str) {
-    if (c === "1") bytes.push(0);
-    else break;
-  }
-  return Buffer.from(bytes.reverse());
-}
-
 // ---------------------------------------------------------------------------
 // Step 2: Insert blockhash BEFORE signing
 // ---------------------------------------------------------------------------
 // The Ed25519 signature covers the message bytes which include the blockhash,
 // so it must be written into the transaction before we sign.
 
-const blockhashBytes = b58decode(bhResp.result.value.blockhash);
+const bhValue = bhResp?.result?.value;
+if (!bhValue || typeof bhValue.blockhash !== "string") {
+  console.error("RPC response missing valid blockhash field:", JSON.stringify(bhResp));
+  process.exit(1);
+}
+
+const blockhashBytes = b58decode(bhValue.blockhash);
+if (blockhashBytes.length !== 32) {
+  console.error(`Invalid blockhash length from RPC (expected 32 bytes, got ${blockhashBytes.length})`);
+  process.exit(1);
+}
 blockhashBytes.copy(tx, blockhashOffset);
 
 // ---------------------------------------------------------------------------
