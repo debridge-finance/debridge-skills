@@ -129,10 +129,9 @@ When **Environment = CLI** or **Headless** with Node.js available, npm packages 
 
 | Scenario | Command | Why |
 |----------|---------|-----|
-| Try an MCP server | `npx -y @debridge-finance/debridge-mcp@latest` | Fetched on demand, nothing retained |
+| Connect to deBridge MCP | `claude mcp add --transport http debridge https://agents.debridge.com/mcp` | Streaming, no install needed |
 | Try a CLI tool | `npx -y ethers` | Quick one-shot use |
 | Build a trading bot | `npm install ethers viem` | Pinned in `package.json`, no re-download |
-| Persistent MCP in agent harness | `npm install -g @debridge-finance/debridge-mcp` | Always available, faster startup |
 | CI/CD pipeline | `npx -y <pkg>` | Clean environment each run |
 
 This applies to all npm packages referenced in downstream skills — MCP servers, signing libraries, SDKs, and utilities.
