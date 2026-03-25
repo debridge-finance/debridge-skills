@@ -1,8 +1,24 @@
 # deBridge Agent Skills
 
-[Agent Skills](https://agentskills.io/specification) for the [deBridge](https://debridge.finance) cross-chain DeFi ecosystem. Skills teach AI agents how to bridge tokens, swap, sign transactions, query balances, and monitor orders across 20+ EVM chains and Solana — using the [deBridge MCP server](https://agents.debridge.com/mcp), SDK, or CLI.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Agent Skills](https://img.shields.io/badge/Agent_Skills-1.0-blue)](https://agentskills.io/specification)
+[![MCP Server](https://img.shields.io/badge/MCP-agents.debridge.com-green)](https://agents.debridge.com/mcp)
+[![Skills](https://img.shields.io/badge/skills-6-purple)](#skills)
+[![Agents](https://img.shields.io/badge/agents-35+-orange)](setup/README.md)
+[![Website](https://img.shields.io/badge/agents.debridge.com-black)](https://agents.debridge.com)
+[![Discord](https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white)](https://discord.gg/debridge)
 
-Skills are the guidance layer; MCP and/or SDK is the execution layer.
+[Agent Skills](https://agentskills.io/specification) for the [deBridge](https://debridge.finance) cross-chain DeFi ecosystem. Skills teach AI agents how to bridge tokens, swap, sign transactions, query balances, and monitor orders across 20+ EVM chains and Solana.
+
+Skills are the guidance layer; the [deBridge MCP server](https://agents.debridge.com/mcp) and SDK are the execution layer.
+
+## Install
+
+```bash
+npx skills add debridge-finance/debridge-skills
+```
+
+This installs all deBridge skills into your agent's skill directory. Works with Claude Code, Cursor, Windsurf, Copilot, Cline, and [35+ other agents](setup/README.md).
 
 ## Skills
 
@@ -12,35 +28,20 @@ Skills are the guidance layer; MCP and/or SDK is the execution layer.
 | [bridge](skills/bridge/SKILL.md) | Cross-chain bridge via DLN: quote, preflight, sign, execute, monitor |
 | [swap](skills/swap/SKILL.md) | Same-chain and cross-chain token swaps |
 | [signing](skills/signing/SKILL.md) | Transaction signing — routes to OWS, ethers/viem, cast, MetaMask, or Privy |
-| [wallets](skills/wallets/SKILL.md) | Wallet setup: EOA, Foundry keystore, Privy embedded |
+| [wallets](skills/wallets/SKILL.md) | Wallet setup: OWS, EOA, Foundry keystore, Privy embedded |
 | [analytics](skills/analytics/SKILL.md) | Token prices, balances, TVL, DEX pools, on-chain data via third-party MCPs |
 
-## Quick Start
+## Connect the MCP Server
 
-### For Agents (MCP)
+Skills tell the agent *what to do*; the MCP server exposes the on-chain tools. Install both.
 
-Connect the deBridge MCP server and point your agent at the skill catalog:
-
-```
-https://agents.debridge.com/llms.txt
-```
-
-Or fetch the structured index:
-
-```
-https://agents.debridge.com/skills/index.json
-```
-
-Skills use progressive disclosure — agents read `llms.txt` or `index.json` to discover skills, then fetch individual `SKILL.md` files on demand.
-
-### For Claude Code
+### Claude Code
 
 ```bash
-# Add the deBridge MCP server
-claude mcp add debridge -- npx -y @debridge-finance/debridge-mcp@latest
+claude mcp add --transport http debridge https://agents.debridge.com/mcp
 ```
 
-### For Claude Desktop / Cursor / Windsurf
+### Cursor / Windsurf / Claude Desktop
 
 Add to your MCP config file:
 
@@ -55,18 +56,31 @@ Add to your MCP config file:
 }
 ```
 
+### Other Agents
+
+See [setup/](setup/README.md) for per-agent setup guides covering 35+ environments, including Copilot, Cline, Codex, Gemini CLI, VS Code, JetBrains, and more.
+
+### Remote Skill Discovery
+
+Agents can also discover skills remotely via progressive disclosure:
+
+```
+https://agents.debridge.com/llms.txt          # llmstxt.org catalog
+https://agents.debridge.com/skills/index.json  # structured index
+```
+
 ## How Skills Work
 
 Each skill directory contains a `SKILL.md` entry point and sibling reference `.md` files. Skills follow four patterns:
 
 1. **Shared Prerequisite** — `common` runs first, detecting environment, MCP connectivity, and available signers.
 2. **Router** — `signing` and `analytics` detect the available tool (OWS, ethers, cast, etc.) and route to the matching reference file.
-3. **Sequential Pipeline** — `bridge` follows a strict order: quote → preflight → sign → execute → monitor.
+3. **Sequential Pipeline** — `bridge` follows a strict order: quote -> preflight -> sign -> execute -> monitor.
 4. **MCP Probe with Fallback** — every skill that calls MCP tools provides an alternative path when MCP is unavailable.
 
 ```
-bridge/SKILL.md → preflight.md → ../signing/SKILL.md → execute → monitoring.md
-                                        ↓
+bridge/SKILL.md -> preflight.md -> ../signing/SKILL.md -> execute -> monitoring.md
+                                        |
                               ows-signing.md | sdk-signer.md | foundry-cast.md | metamask.md | privy-mcp.md
 ```
 
@@ -76,23 +90,23 @@ bridge/SKILL.md → preflight.md → ../signing/SKILL.md → execute → monitor
 debridge-skills/
 ├── skills/
 │   ├── common/               # Shared prereq: env detection, MCP setup, chain config, RPC discovery
-│   ├── bridge/               # Sequenced: quote → preflight → sign → execute → monitor
+│   ├── bridge/               # Sequenced: quote -> preflight -> sign -> execute -> monitor
 │   ├── swap/                 # Same-chain and cross-chain swap flows
 │   ├── signing/              # Router: wallet/signer strategy selection
-│   ├── wallets/              # Wallet setup: EOA, Foundry keystore, embedded
+│   ├── wallets/              # Wallet setup: OWS, EOA, Foundry keystore, embedded
 │   ├── analytics/            # Balances, prices, TVL, DEX pools, on-chain data
 │   └── index.json            # Generated: skill discovery catalog
+├── setup/
+│   ├── agents/               # Per-agent setup guides (35+ agents)
+│   └── wallets/              # Per-wallet setup guides (7 wallets)
 ├── scripts/
 │   ├── validate.ts           # Schema + structural validation
 │   ├── build-index.ts        # Generate skills/index.json
 │   └── generate-llmstxt.ts   # Generate llms.txt
 ├── evals/                    # LLM evaluation harness
-├── tests/                    # Unit + integration tests
 ├── plugin.json               # Plugin descriptor
 └── llms.txt                  # Generated: llmstxt.org skill catalog
 ```
-
-Reference files live as siblings of `SKILL.md` — no subdirectories inside skill directories. Directory names are short (`bridge/`, not `debridge-bridge/`); the `debridge-` prefix appears only in the SKILL.md frontmatter `name` field.
 
 ## Development
 
@@ -105,9 +119,9 @@ npm install
 ### Commands
 
 ```bash
-npm run validate              # Schema + structural checks (284 rules)
+npm run validate              # Schema + structural checks (228 rules)
 npm run validate:verbose      # Validate with passing rules shown
-npm run build                 # Full pipeline: validate → index.json → llms.txt
+npm run build                 # Full pipeline: validate -> index.json -> llms.txt
 npm run build:index           # Generate skills/index.json
 npm run build:llmstxt         # Generate llms.txt
 npm run check                 # CI: verify generated files are up to date
@@ -184,8 +198,10 @@ Every skill should have eval cases covering: happy path, MCP-unavailable fallbac
 ## Related
 
 - [deBridge MCP Server](https://agents.debridge.com/mcp) — live cross-chain infrastructure tools
-- [Agent Skills Open Standard](https://agentskills.io/specification) — the specification these skills follow
+- [Agent Skills Specification](https://agentskills.io/specification) — the standard these skills follow
 - [llms.txt Standard](https://llmstxt.org/) — the format used for `llms.txt`
+- [skills.sh](https://skills.sh/) — skill discovery platform
+- [Setup Guides](setup/README.md) — per-agent and per-wallet setup instructions
 
 ## License
 

@@ -1,8 +1,31 @@
 {
   "name": "debridge-skills",
-  "private": true,
   "version": "0.1.0",
-  "description": "deBridge cross-chain DeFi agent skills",
+  "description": "deBridge cross-chain DeFi agent skills — bridge, swap, sign, and monitor across 20+ chains and Solana",
+  "homepage": "https://agents.debridge.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/debridge-finance/debridge-skills.git"
+  },
+  "keywords": [
+    "agent-skills",
+    "skills",
+    "ai-agents",
+    "claude-code",
+    "cursor",
+    "windsurf",
+    "copilot",
+    "cline",
+    "mcp",
+    "debridge",
+    "defi",
+    "cross-chain",
+    "bridge",
+    "swap",
+    "solana",
+    "evm"
+  ],
+  "license": "MIT",
   "scripts": {
     "validate": "npx tsx scripts/validate.ts",
     "validate:verbose": "npx tsx scripts/validate.ts --verbose",
