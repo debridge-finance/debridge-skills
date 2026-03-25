@@ -34,3 +34,4 @@
 - [Preflight Checks](skills/swap/preflight.md)
 - [Order Monitoring and Fulfillment Tracking](skills/swap/monitoring.md)
 - [Privy Embedded Wallet Setup](skills/wallets/privy-embedded.md)
+- [deBridge Signing with OWS (Open Wallet Standard)](skills/wallets/ows-signing.md)

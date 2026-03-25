@@ -35,7 +35,7 @@ import { getRpc, getChainInfo } from "../../common/scripts/rpc.mjs";
 const args = process.argv.slice(2);
 
 if (args.length === 0 || args.includes("--help") || args.includes("-h")) {
-  console.log("Usage: node balance-evm.mjs <address_or_wallet> [--chains <ids>] [--all] [--json]");
+  console.log("Usage: node balance-evm.mjs <0x_address> [--chains <ids>] [--all] [--json]");
   process.exit(0);
 }
 
@@ -166,14 +166,24 @@ async function fetchBalance(chainId) {
       const paddedAddr = address.toLowerCase().replace(/^0x/, "").padStart(64, "0");
       const balanceData = BALANCE_OF_SELECTOR + paddedAddr;
 
-      const [balHex, decHex, symHex] = await Promise.all([
-        rpcCall(rpcUrl, "eth_call", [{ to: flags.token, data: balanceData }, "latest"]),
-        rpcCall(rpcUrl, "eth_call", [{ to: flags.token, data: DECIMALS_SELECTOR }, "latest"]).catch(() => null),
-        rpcCall(rpcUrl, "eth_call", [{ to: flags.token, data: SYMBOL_SELECTOR }, "latest"]).catch(() => null),
-      ]);
+      // Fetch decimals and symbol first — these are required for correct display.
+      // Do NOT default to 18 decimals on failure: that silently produces wrong values.
+      let tokenDecimals;
+      let tokenSymbol;
+      try {
+        const decHex = await rpcCall(rpcUrl, "eth_call", [{ to: flags.token, data: DECIMALS_SELECTOR }, "latest"]);
+        tokenDecimals = Number(decodeUint(decHex));
+      } catch (err) {
+        return { chain: name, chainId, balance: null, symbol: flags.token, tokenAddress: flags.token, error: `failed to read token decimals: ${err.message}` };
+      }
+      try {
+        const symHex = await rpcCall(rpcUrl, "eth_call", [{ to: flags.token, data: SYMBOL_SELECTOR }, "latest"]);
+        tokenSymbol = decodeString(symHex) || flags.token;
+      } catch {
+        tokenSymbol = flags.token;
+      }
 
-      const tokenDecimals = decHex ? Number(decodeUint(decHex)) : 18;
-      const tokenSymbol = symHex ? decodeString(symHex) || flags.token : flags.token;
+      const balHex = await rpcCall(rpcUrl, "eth_call", [{ to: flags.token, data: balanceData }, "latest"]);
 
       return { chain: name, chainId, balance: formatBalance(balHex, tokenDecimals), symbol: tokenSymbol, tokenAddress: flags.token };
     }

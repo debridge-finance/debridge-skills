@@ -58,8 +58,10 @@ if (quote.message || quote.code) {
 }
 
 const est = quote.estimation.dstChainTokenOut;
-console.log(`Estimated output: ${(Number(est.amount) / Math.pow(10, est.decimals)).toFixed(4)} ${est.symbol} (~$${est.approximateUsdValue.toFixed(2)})`);
-console.log("Order ID:", quote.orderId);
+if (!flags.json) {
+  console.log(`Estimated output: ${(Number(est.amount) / Math.pow(10, est.decimals)).toFixed(4)} ${est.symbol} (~$${est.approximateUsdValue.toFixed(2)})`);
+  console.log("Order ID:", quote.orderId);
+}
 
 // ---------------------------------------------------------------------------
 // Sign and broadcast
@@ -118,13 +120,18 @@ if (blockhashBytes.length !== 32) {
 blockhashBytes.copy(tx, blockhashOffset);
 
 // Sign message bytes (offset 65+)
-console.log("Signing with OWS...");
+if (!flags.json) console.log("Signing with OWS...");
 const messageHex = tx.subarray(65).toString("hex");
 const signResult = signMessage(walletName, "solana", messageHex, undefined, "hex");
-Buffer.from(signResult.signature, "hex").copy(tx, 1);
+const sigBytes = Buffer.from(signResult.signature, "hex");
+if (sigBytes.length !== 64) {
+  console.error(`Invalid signature length (expected 64 bytes, got ${sigBytes.length})`);
+  process.exit(1);
+}
+sigBytes.copy(tx, 1);
 
 // Broadcast
-console.log("Broadcasting...");
+if (!flags.json) console.log("Broadcasting...");
 const txBase64 = tx.toString("base64");
 const sendResp = await fetch(rpcUrl, {
   method: "POST",
@@ -141,5 +148,12 @@ if (sendResp.error) {
   process.exit(1);
 }
 
-console.log("Transaction sent:", sendResp.result);
-console.log("Order ID:", quote.orderId);
+if (flags.json) {
+  console.log(JSON.stringify({
+    txSignature: sendResp.result,
+    orderId: quote.orderId,
+  }, null, 2));
+} else {
+  console.log("Transaction sent:", sendResp.result);
+  console.log("Order ID:", quote.orderId);
+}

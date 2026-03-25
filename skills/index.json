@@ -59,6 +59,7 @@
       "scripts": [
         "skills/signing/scripts/debridge-evm-bridge.mjs",
         "skills/signing/scripts/debridge-solana-bridge.mjs",
+        "skills/signing/scripts/erc20-approve.mjs",
         "skills/signing/scripts/ows-solana-sign.mjs"
       ]
     },
@@ -76,6 +77,7 @@
       "description": "Set up a wallet for deBridge transactions. Use when the user has no signer available, needs to create a new wallet, or wants to configure wallet access for an AI agent. Covers OWS local self-custody wallets (recommended — multi-chain, encrypted keys, CLI/JS), generating a raw private key, creating a Foundry keystore, installing a browser wallet (MetaMask), and setting up Privy embedded wallets for zero-UI autonomous agent trading. Use this skill when: the user says \"I don't have a wallet\", \"how do I set up a wallet\", \"create a new wallet\", \"generate an address\", \"I need a wallet for bridging\", \"set up OWS\", \"OWS wallet\", \"set up Privy\", \"embedded wallet for my agent\", \"keystore setup\", or when WALLET_DISCOVERY detected no signer. Also relevant for \"conversational trading setup\" and \"autonomous agent wallet\".",
       "entry_point": "skills/wallets/SKILL.md",
       "references": [
+        "skills/wallets/ows-signing.md",
         "skills/wallets/privy-embedded.md"
       ]
     }

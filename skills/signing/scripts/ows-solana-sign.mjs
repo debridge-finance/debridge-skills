@@ -169,7 +169,12 @@ const signResult = signMessage(walletName, "solana", messageHex, undefined, "hex
 // Step 4: Insert the 64-byte signature at bytes 1-64
 // ---------------------------------------------------------------------------
 
-Buffer.from(signResult.signature, "hex").copy(tx, 1);
+const sigBytes = Buffer.from(signResult.signature, "hex");
+if (sigBytes.length !== 64) {
+  console.error(`Invalid signature length (expected 64 bytes, got ${sigBytes.length})`);
+  process.exit(1);
+}
+sigBytes.copy(tx, 1);
 
 // ---------------------------------------------------------------------------
 // Step 5: Broadcast the assembled transaction as base64
