@@ -69,12 +69,22 @@ When Signer = `env-privkey`, a private key exists but a signing library is still
 
 After `mcp__debridge__create_tx` or `mcp__debridge__estimate_same_chain_swap` returns tx data:
 
+### Step 0: Preflight Checks
+
+Before signing, the agent MUST verify:
+
+1. **Native balance for gas + fixFee** — Parse `fixFee` (wei) and `estimatedTransactionFee.total` from the response. Check that the wallet's native balance on the source chain covers both. If insufficient, stop and tell the user how much more they need.
+2. **ERC-20 allowance** (EVM only, non-native tokens) — If the response does NOT include `approveTx`, the agent MUST still check the token's allowance for the bridge contract (`tx.to`). Use `scripts/erc20-approve.mjs` to check and approve if needed. Do NOT assume the MCP always returns `approveTx` — it may not.
+3. **SOL rent/fees** (Solana source) — Solana bridge txs require ~0.024 SOL for rent deposits + tx fees, on top of the bridge amount. Check SOL balance before signing.
+
 ### Step 1: Check for Approval
 
 If the response includes an approval transaction (`approveTx`):
 1. Sign and send the approval tx first.
 2. Wait for confirmation (1 block).
 3. Proceed to Step 2.
+
+If no `approveTx` but source token is ERC-20, run `scripts/erc20-approve.mjs` to check/approve (see Step 0).
 
 ### Step 2: Sign and Send Bridge Transaction
 

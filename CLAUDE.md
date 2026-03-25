@@ -84,20 +84,22 @@ When documenting an external tool (OWS, Privy, Foundry, etc.):
 ## Scripting Conventions
 
 - **JS/Node.js is the only supported scripting language.** Do not add Python scripts or recommend Python approaches.
-- **NEVER call MCP from inside JS scripts.** The agent is the MCP client — it calls MCP tools directly (or via mcpc CLI), then pipes the JSON response to scripts via stdin. Scripts handle only signing, broadcasting, and on-chain queries. This is a hard rule with no exceptions.
-- **Use bundled scripts** for signing and broadcasting. The agent calls MCP to get the quote, then pipes the `create_tx` JSON response to the signing script. This separation keeps MCP concerns in the agent and signing concerns in the script.
+- **NEVER call MCP from inside JS scripts.** The agent is the MCP client — it calls MCP tools directly (or via mcpc CLI), then passes parsed results to scripts. Scripts handle only signing, broadcasting, and on-chain queries. This is a hard rule with no exceptions.
+- **Scripts prefer CLI arguments over piped JSON.** The agent parses MCP responses and passes clean values as CLI args. JSON via stdin is acceptable only for deeply nested reusable structures (e.g., EIP-712 typed data). The agent is responsible for extracting fields from MCP responses — scripts should not parse MCP envelopes.
+- **Use bundled scripts** for signing, broadcasting, and approvals. The agent calls MCP to get the quote, parses the response, and invokes the appropriate script with the extracted parameters.
 - **EVM and Solana have separate scripts** — do not combine them into a single multi-chain tool.
 - **Available scripts:**
   - `signing/scripts/debridge-evm-bridge.mjs` — EVM: reads create_tx JSON from stdin → OWS sign → assemble → broadcast
   - `signing/scripts/debridge-solana-bridge.mjs` — Solana: reads create_tx JSON from stdin → OWS sign → broadcast
+  - `signing/scripts/erc20-approve.mjs` — EVM: check allowance and approve ERC-20 token for a spender (CLI args, no stdin)
   - `analytics/scripts/balance-evm.mjs` — EVM multi-chain balance check
   - `analytics/scripts/balance-solana.mjs` — Solana balance check (SOL + SPL tokens)
 - **Never pass large hex data through shell variables** — they truncate or produce odd-length strings. Pipe JSON via stdin instead.
 - **No hardcoded RPC URLs.** All scripts import `common/scripts/rpc.mjs` for dynamic RPC discovery via Chainlist. Solana RPCs are resolved via `$SOLANA_RPC_URL` or a public fallback. Never embed RPC URLs in scripts or docs — use `getRpc(chainId)`.
-- **No hardcoded chain lists.** The LLM calls `mcp__debridge__get_supported_chains` to get the current list of chains, then passes the relevant chain ID(s) to scripts. Scripts never call MCP directly.
-- **No curl snippets in docs.** Use the bundled `.mjs` scripts instead — they're more reliable and handle RPC discovery automatically.
+- **No hardcoded chain lists in skills/docs.** Agent flows should call `mcp__debridge__get_supported_chains` to get the current list of chains, then pass the relevant chain ID(s) to scripts. Small, internal default chain sets are permitted inside helper/analytics scripts (e.g., `analytics/scripts/balance-evm.mjs`) as long as they are clearly non-authoritative and not used to infer "supported chains" in skills. Scripts never call MCP directly.
+- **No curl snippets for deBridge/RPC flows.** Use the bundled `.mjs` scripts instead — they're more reliable and handle RPC discovery automatically. Curl may be used only for installing tooling or dependencies (e.g., an SDK/CLI installer), not for on-chain queries or API calls.
 - **OWS EVM signing returns raw signatures**, not broadcast-ready transactions. The EVM bridge script handles assembly; see `ows-signing.md` for the format details.
-- **mcpc output format:** JSON is wrapped in ```` markers. Scripts can parse this with a regex: `/````\n([\s\S]*?)\n````/` when reading piped mcpc output.
+- **mcpc output format:** Always use `mcpc --json` for machine-readable output. The response is a JSON envelope `{content:[{text:"<inner JSON>"}]}`. The agent MUST parse the envelope and extract the inner JSON before passing to scripts — scripts expect plain JSON, not MCP envelopes.
 
 ## Conventions
 
