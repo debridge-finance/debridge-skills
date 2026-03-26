@@ -75,34 +75,63 @@ Call mcp__debridge__search_tokens:
 
 Repeat for the output token. Record `address` and `decimals`.
 
-### Step 2: Estimate Swap
-
-Note: despite the name "estimate", this tool returns executable transaction data — no separate execution step is needed.
+### Step 2: Build Swap Transaction
 
 ```
-Call mcp__debridge__estimate_same_chain_swap:
-  - chainId:        42161                  (chain deBridge ID)
-  - tokenIn:        "0xaf88...e5831"       (input token address)
-  - tokenInAmount:  "1000000000"           (amount in raw units — see Amount Conversion)
-  - tokenOut:       "0x0000...0000"        (output token address)
+Call mcp__debridge__transaction_same_chain_swap:
+  - chainId:           "42161"               (string, chain deBridge ID)
+  - tokenIn:           "0xaf88...e5831"      (input token address)
+  - tokenInAmount:     "1000000000"          (amount in raw units — see Amount Conversion)
+  - tokenOut:          "0x0000...0000"       (output token address)
+  - tokenOutRecipient: "0xYourAddress"       (recipient address on the same chain)
 ```
+
+Optional parameters:
+- `slippage` — tolerance or `"auto"` (default: auto)
+- `tokenOutAmount` — expected output or `"auto"`
+- `senderAddress` — transaction submitter address
+- `affiliateFeePercent` / `affiliateFeeRecipient` — affiliate fees
+
+**All parameters are strings.** Do NOT pass numbers for chain IDs.
+
+#### Response Format
 
 The response includes:
-- Estimated output amount (in raw units)
-- Fee breakdown
-- Transaction data for execution
+- `tx` — the transaction object to sign and send (format depends on chain, see below)
+- `tokenIn` / `tokenOut` — token metadata with `amount`, `minAmount`, `approximateUsdValue`
+- `slippage` / `recommendedSlippage` — applied and recommended slippage (bps)
+- `estimatedTransactionFee` — gas estimate with `total` (in raw native units) and `approximateUsdValue`
+- `comparedAggregators` — price comparison with other DEX aggregators
+- `costsDetails` — detailed fee breakdown
+
+**EVM chains** — `tx` contains `{to, data, value}`:
+```json
+{
+  "tx": { "to": "0x663D...c251", "data": "0x258c...", "value": "0" },
+  "tokenOut": { "amount": "10027065", "minAmount": "10019037", ... }
+}
+```
+
+**Solana** (chain ID `7565164`) — `tx` contains `{data}` only (hex-encoded serialized transaction):
+```json
+{
+  "tx": { "data": "0x01000000..." },
+  "tokenOut": { "amount": "87206972", "minAmount": "86927910", ... }
+}
+```
+Solana transactions are fully serialized — pass `tx.data` to the Solana signing pipeline (see ../signing/ows-signing.md for OWS Solana flow).
 
 ### Step 3: Preflight Checks
 
 Read [preflight.md](preflight.md) before proceeding.
 
-Checks: balance, allowance (for ERC-20 input), and gas budget.
+Checks: balance, allowance (for ERC-20 input on EVM), and gas budget.
 
 ### Step 4: Sign and Send
 
 Read ../signing/SKILL.md — it detects the available signer and routes to the correct signing method.
 
-1. If approval needed → sign and send approval tx first. Wait for 1 confirmation.
+1. If ERC-20 input on EVM and allowance insufficient → sign and send approval tx first. Wait for 1 confirmation.
 2. Sign and send the swap tx.
 
 Same-chain swaps settle in a single transaction. No monitoring step needed — the tx receipt confirms completion.
@@ -219,7 +248,7 @@ All scripts support `--json` for machine-readable output and `--rpc <url>` to ov
 |------------------------------|------------------------------------|----------------------------------------------|
 | No route found               | Token pair not supported on chains | Check `get_supported_chains` and `search_tokens` |
 | Insufficient allowance       | Preflight should catch this        | Send approval tx first, then retry           |
-| Slippage exceeded            | Price moved during execution       | Re-call `create_tx` or re-estimate for fresh quote |
+| Slippage exceeded            | Price moved during execution       | Re-call `create_tx` or `transaction_same_chain_swap` for fresh quote |
 | Amount too small             | Below minimum amount               | Increase amount or check minimum             |
 | Insufficient liquidity       | Pool too small for amount          | Reduce amount or try a different pair        |
 | Destination chain unsupported| Wrong chain ID format              | Use deBridge chain IDs from ../common/chain-config.md |

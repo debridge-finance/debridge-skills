@@ -388,12 +388,12 @@ Pass these resolved addresses to all downstream operations — balance scripts, 
 
 ## MCP Tool Reference
 
-| MCP Tool                                  | Purpose                                    |
-|-------------------------------------------|--------------------------------------------|
-| `mcp__debridge__get_supported_chains`     | List supported chains with IDs and names   |
-| `mcp__debridge__search_tokens`            | Find token by name, symbol, or address     |
-| `mcp__debridge__create_tx`                | Build cross-chain bridge/swap transaction  |
-| `mcp__debridge__estimate_same_chain_swap` | Estimate same-chain swap output and fees   |
+| MCP Tool                                        | Purpose                                    |
+|-------------------------------------------------|--------------------------------------------|
+| `mcp__debridge__get_supported_chains`           | List supported chains with IDs and names   |
+| `mcp__debridge__search_tokens`                  | Find token by name, symbol, or address     |
+| `mcp__debridge__create_tx`                      | Build cross-chain bridge/swap transaction  |
+| `mcp__debridge__transaction_same_chain_swap`    | Build same-chain swap transaction          |
 
 All MCP tools expect token amounts in **raw units** (the smallest indivisible unit: wei for EVM, lamports for Solana) passed as strings. See [chain-config.md](chain-config.md) for decimals and conversion.
 

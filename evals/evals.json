@@ -50,13 +50,13 @@
       "id": 4,
       "skill": "debridge-swap",
       "prompt": "Swap 1000 USDC for ETH on Arbitrum",
-      "expected_output": "Agent identifies this as a same-chain swap, resolves both tokens on Arbitrum, calls estimate_same_chain_swap, runs preflight, and routes to signing.",
+      "expected_output": "Agent identifies this as a same-chain swap, resolves both tokens on Arbitrum, calls transaction_same_chain_swap, runs preflight, and routes to signing.",
       "files": [],
       "expectations": [
         "Identifies this as a same-chain swap (source and destination on the same chain)",
         "Calls or references mcp__debridge__search_tokens for USDC on Arbitrum",
         "Calls or references mcp__debridge__search_tokens for ETH on Arbitrum",
-        "Calls or references mcp__debridge__estimate_same_chain_swap (not create_tx)",
+        "Calls or references mcp__debridge__transaction_same_chain_swap (not create_tx)",
         "Converts 1000 USDC to raw units (1000000000) using 6 decimals",
         "References preflight checks before signing",
         "Mentions that same-chain swaps settle in a single transaction (no monitoring needed)"
@@ -71,7 +71,7 @@
       "expectations": [
         "Identifies this as a cross-chain operation (Ethereum to Polygon are different chains)",
         "Routes to the cross-chain swap flow or references create_tx",
-        "Does NOT use estimate_same_chain_swap for a cross-chain operation",
+        "Does NOT use transaction_same_chain_swap for a cross-chain operation",
         "Resolves USDT on Ethereum and USDC on Polygon",
         "Calls or references mcp__debridge__create_tx for the cross-chain transfer"
       ]

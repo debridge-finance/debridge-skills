@@ -35,7 +35,7 @@ PREREQUISITE: Read ../common/SKILL.md for environment detection, auth, and chain
 
 ## What Needs Signing
 
-deBridge transactions from `mcp__debridge__create_tx` (cross-chain) or `mcp__debridge__estimate_same_chain_swap` (same-chain) return up to two transaction objects to sign:
+deBridge transactions from `mcp__debridge__create_tx` (cross-chain) or `mcp__debridge__transaction_same_chain_swap` (same-chain) return up to two transaction objects to sign:
 
 1. **Token approval tx** (if allowance insufficient) — a standard EVM transaction calling `approve()` on the token contract.
 2. **Bridge/swap tx** — an EVM transaction that may include EIP-712 typed data for DLN order creation.
@@ -67,7 +67,7 @@ When Signer = `env-privkey`, a private key exists but a signing library is still
 
 ## Transaction Flow
 
-After `mcp__debridge__create_tx` or `mcp__debridge__estimate_same_chain_swap` returns tx data:
+After `mcp__debridge__create_tx` or `mcp__debridge__transaction_same_chain_swap` returns tx data:
 
 ### Step 0: Preflight Checks
 
