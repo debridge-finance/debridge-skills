@@ -46,7 +46,7 @@ Check if the deBridge contract is approved to spend the token:
 cast call "$TOKEN_ADDRESS" "allowance(address,address)" "$WALLET_ADDRESS" "$SPENDER_ADDRESS" --rpc-url "$RPC_URL"
 ```
 
-The `$SPENDER_ADDRESS` is the `tx.to` field from the `create_tx` or `estimate_same_chain_swap` response.
+The `$SPENDER_ADDRESS` is the `tx.to` field from the `create_tx` or `transaction_same_chain_swap` response.
 
 If allowance < required amount:
 - The response should include an `approveTx` object.
