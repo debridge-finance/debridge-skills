@@ -67,8 +67,12 @@ const { execSync } = require('child_process');
 
 // -- CONFIG: set these from deBridge response --
 const txHex = '<tx.data from deBridge, strip leading 0x>';
+import { Connection } from '@solana/web3.js';
+import bs58 from 'bs58';
+
 const wallet = 'agent-treasury'; // OWS wallet name
 const rpcUrl = process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
+const connection = new Connection(rpcUrl, 'confirmed');
 
 const tx = Buffer.from(txHex, 'hex');
 
@@ -79,36 +83,11 @@ const numKeys = tx[69];
 const bhOffset = 70 + numKeys * 32;
 
 // Step 1: Fresh blockhash
-const bhResp = await fetch(rpcUrl, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    jsonrpc: '2.0', id: 1,
-    method: 'getLatestBlockhash',
-    params: [{ commitment: 'confirmed' }]
-  })
-}).then(r => r.json());
-
-// Base58 decode the blockhash
-const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-function b58decode(str) {
-  const bytes = [0];
-  for (const c of str) {
-    let carry = ALPHABET.indexOf(c);
-    for (let j = 0; j < bytes.length; j++) {
-      carry += bytes[j] * 58;
-      bytes[j] = carry & 0xff;
-      carry >>= 8;
-    }
-    while (carry > 0) { bytes.push(carry & 0xff); carry >>= 8; }
-  }
-  for (const c of str) { if (c === '1') bytes.push(0); else break; }
-  return Buffer.from(bytes.reverse());
-}
+const { blockhash } = await connection.getLatestBlockhash('confirmed');
 
 // Step 2: Insert blockhash BEFORE signing
-const bhBytes = b58decode(bhResp.result.value.blockhash);
-bhBytes.copy(tx, bhOffset);
+const bhBytes = bs58.decode(blockhash);
+Buffer.from(bhBytes).copy(tx, bhOffset);
 
 // Step 3: Sign message bytes (offset 65+) with OWS
 const messageHex = tx.subarray(65).toString('hex');
@@ -121,19 +100,13 @@ const { signature } = JSON.parse(sigJson);
 // Step 4: Insert signature at bytes 1-64
 Buffer.from(signature, 'hex').copy(tx, 1);
 
-// Step 5: Broadcast as base64
-const txBase64 = tx.toString('base64');
-const result = await fetch(rpcUrl, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    jsonrpc: '2.0', id: 1,
-    method: 'sendTransaction',
-    params: [txBase64, { encoding: 'base64', skipPreflight: false, preflightCommitment: 'confirmed' }]
-  })
-}).then(r => r.json());
+// Step 5: Broadcast
+const txSignature = await connection.sendRawTransaction(tx, {
+  skipPreflight: false,
+  preflightCommitment: 'confirmed',
+});
 
-console.log(JSON.stringify(result, null, 2));
+console.log('Transaction sent:', txSignature);
 ```
 
 Run with: `node --experimental-vm-modules` or wrap in an async IIFE.
