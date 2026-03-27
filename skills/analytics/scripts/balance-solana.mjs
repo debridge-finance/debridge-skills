@@ -32,7 +32,10 @@
 //   # JSON output for scripting
 //   node balance-solana.mjs B7Z1whe4TX3tVXwb93Nsd9U4f4QZfnuzm5DyUnKxVSUr --tokens --json
 
+import { Connection, PublicKey } from "@solana/web3.js";
 import { getRpc } from "../../common/scripts/rpc.mjs";
+
+const COMMITMENT = "confirmed";
 
 // ---------------------------------------------------------------------------
 // Parse CLI arguments
@@ -61,6 +64,7 @@ if (positional.length < 1) {
 
 // Solana chain ID in deBridge is 7565164 — rpc.mjs handles env var + fallback
 const rpcUrl = await getRpc(7565164);
+const connection = new Connection(rpcUrl, COMMITMENT);
 
 // ---------------------------------------------------------------------------
 // Validate Solana address
@@ -80,52 +84,24 @@ if (!BASE58_RE.test(address)) {
   process.exit(1);
 }
 
-// ---------------------------------------------------------------------------
-// Helper: send a JSON-RPC request to Solana
-// ---------------------------------------------------------------------------
-async function rpc(method, params) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000);
-  let resp;
-  try {
-    resp = await fetch(rpcUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
-      signal: controller.signal,
-    });
-  } catch (err) {
-    clearTimeout(timeout);
-    if (err.name === "AbortError") throw new Error(`RPC timeout (${method}) after 15 s`);
-    throw err;
-  }
-  clearTimeout(timeout);
-
-  const data = await resp.json();
-  if (data.error) {
-    throw new Error(`RPC error (${method}): ${data.error.message || JSON.stringify(data.error)}`);
-  }
-  return data.result;
-}
+const pubkey = new PublicKey(address);
 
 // ---------------------------------------------------------------------------
 // Step 1: Query native SOL balance
 // ---------------------------------------------------------------------------
-const balanceResult = await rpc("getBalance", [address, { commitment: "confirmed" }]);
-const solBalance = balanceResult.value / 1e9;
+const lamports = await connection.getBalance(pubkey);
+const solBalance = lamports / 1e9;
 
 // ---------------------------------------------------------------------------
 // Step 2: Query SPL token balances (if --tokens)
 // ---------------------------------------------------------------------------
-const TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 let tokenAccounts = [];
 
 if (flags.tokens) {
-  const tokenResult = await rpc("getTokenAccountsByOwner", [
-    address,
-    { programId: TOKEN_PROGRAM_ID },
-    { encoding: "jsonParsed", commitment: "confirmed" },
-  ]);
+  const tokenResult = await connection.getParsedTokenAccountsByOwner(pubkey, {
+    programId: TOKEN_PROGRAM_ID,
+  });
 
   tokenAccounts = tokenResult.value
     .map((account) => {

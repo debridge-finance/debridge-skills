@@ -15,8 +15,11 @@
 //   npm install @open-wallet-standard/core
 
 import { signMessage } from "@open-wallet-standard/core";
+import { Connection } from "@solana/web3.js";
+import bs58 from "bs58";
 import { getRpc } from "../../common/scripts/rpc.mjs";
-import { b58decode } from "../../common/scripts/b58.mjs";
+
+const COMMITMENT = "confirmed";
 
 // ---------------------------------------------------------------------------
 // Parse CLI
@@ -39,6 +42,7 @@ if (positional.length < 1) {
 
 const walletName = positional[0];
 const rpcUrl = flags.rpc || await getRpc(7565164);
+const connection = new Connection(rpcUrl, COMMITMENT);
 
 // ---------------------------------------------------------------------------
 // Read create_tx response from stdin
@@ -90,34 +94,15 @@ if (blockhashOffset + 32 > tx.length) {
 }
 
 // Fetch fresh blockhash
-const bhResp = await fetch(rpcUrl, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    jsonrpc: "2.0", id: 1,
-    method: "getLatestBlockhash",
-    params: [{ commitment: "confirmed" }],
-  }),
-}).then((r) => r.json());
-
-if (bhResp.error) {
-  console.error("RPC error fetching blockhash:", bhResp.error);
-  process.exit(1);
-}
+const { blockhash } = await connection.getLatestBlockhash(COMMITMENT);
 
 // Insert blockhash
-const bhValue = bhResp?.result?.value;
-if (!bhValue || typeof bhValue.blockhash !== "string") {
-  console.error("RPC response missing valid blockhash field:", JSON.stringify(bhResp));
-  process.exit(1);
-}
-
-const blockhashBytes = b58decode(bhValue.blockhash);
+const blockhashBytes = bs58.decode(blockhash);
 if (blockhashBytes.length !== 32) {
   console.error(`Invalid blockhash length from RPC (expected 32 bytes, got ${blockhashBytes.length})`);
   process.exit(1);
 }
-blockhashBytes.copy(tx, blockhashOffset);
+Buffer.from(blockhashBytes).copy(tx, blockhashOffset);
 
 // Sign message bytes (offset 65+)
 if (!flags.json) console.log("Signing with OWS...");
@@ -132,28 +117,17 @@ sigBytes.copy(tx, 1);
 
 // Broadcast
 if (!flags.json) console.log("Broadcasting...");
-const txBase64 = tx.toString("base64");
-const sendResp = await fetch(rpcUrl, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    jsonrpc: "2.0", id: 1,
-    method: "sendTransaction",
-    params: [txBase64, { encoding: "base64", skipPreflight: false, preflightCommitment: "confirmed" }],
-  }),
-}).then((r) => r.json());
-
-if (sendResp.error) {
-  console.error("Broadcast failed:", sendResp.error.message || JSON.stringify(sendResp.error));
-  process.exit(1);
-}
+const txSignature = await connection.sendRawTransaction(tx, {
+  skipPreflight: false,
+  preflightCommitment: COMMITMENT,
+});
 
 if (flags.json) {
   console.log(JSON.stringify({
-    txSignature: sendResp.result,
+    txSignature,
     orderId: quote.orderId,
   }, null, 2));
 } else {
-  console.log("Transaction sent:", sendResp.result);
+  console.log("Transaction sent:", txSignature);
   console.log("Order ID:", quote.orderId);
 }

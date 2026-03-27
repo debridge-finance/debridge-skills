@@ -18,7 +18,6 @@
       "scripts": [
         "skills/common/scripts/allowance.ts",
         "skills/common/scripts/approve.ts",
-        "skills/common/scripts/b58.mjs",
         "skills/common/scripts/balance.ts",
         "skills/common/scripts/convert-amount.ts",
         "skills/common/scripts/env-keys.mjs",

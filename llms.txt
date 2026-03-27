@@ -35,7 +35,6 @@ Base URI: `https://agents.debridge.com`
 Scripts:
 - https://agents.debridge.com/skills/common/scripts/allowance.ts
 - https://agents.debridge.com/skills/common/scripts/approve.ts
-- https://agents.debridge.com/skills/common/scripts/b58.mjs
 - https://agents.debridge.com/skills/common/scripts/balance.ts
 - https://agents.debridge.com/skills/common/scripts/convert-amount.ts
 - https://agents.debridge.com/skills/common/scripts/env-keys.mjs
