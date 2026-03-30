@@ -186,6 +186,11 @@ Call mcp__debridge__create_tx:
 
 **All parameters are strings.** Do NOT pass numbers for chain IDs.
 
+Optional parameters:
+- `dstChainTokenOutAmount` — expected output amount or `"auto"` for best quote (default: auto)
+- `prependOperatingExpenses` — set `true` to add estimated operating expenses to the input amount
+- `affiliateFeePercent` / `affiliateFeeRecipient` — affiliate fees
+
 The response from `create_tx` includes:
 - `tx` — the main transaction object (`to`, `data`, `value`, `chainId`)
 - `approveTx` — token approval transaction (if ERC-20 allowance is insufficient)

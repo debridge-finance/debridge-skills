@@ -390,6 +390,7 @@ Pass these resolved addresses to all downstream operations — balance scripts, 
 
 | MCP Tool                                        | Purpose                                    |
 |-------------------------------------------------|--------------------------------------------|
+| `mcp__debridge__get_instructions`               | Return the server's canonical workflow guide — call first |
 | `mcp__debridge__get_supported_chains`           | List supported chains with IDs and names   |
 | `mcp__debridge__search_tokens`                  | Find token by name, symbol, or address     |
 | `mcp__debridge__create_tx`                      | Build cross-chain bridge/swap transaction  |
