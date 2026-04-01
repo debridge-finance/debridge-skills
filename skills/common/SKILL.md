@@ -3,7 +3,7 @@ name: debridge-common
 description: >
   Shared prerequisite for all deBridge agent skills. Runs three stages:
   ENVIRONMENT_DETECTION (CLI, MCP Desktop, browser, headless, chat-only),
-  ACCESS_SETUP (streaming MCP, stdio MCP, mcpc, SDK), and WALLET_DISCOVERY
+  ACCESS_SETUP (streaming MCP, stdio MCP via @debridge-finance/debridge-mcp, SDK), and WALLET_DISCOVERY
   (auto-discover all signers and resolve wallet addresses). Run this first
   before any deBridge operation. Use whenever the user mentions deBridge for
   the first time in a session, asks about supported chains, needs to connect
@@ -29,7 +29,7 @@ metadata:
 | Look up chain IDs and tokens  | [chain-config.md](chain-config.md)       |
 | Discover RPC endpoints        | [rpc-discovery.md](rpc-discovery.md)     |
 | Run bundled helper scripts    | `scripts/` directory (balance, allowance, convert, RPC) |
-| Call MCP tools from CLI       | [mcpc-usage.md](mcpc-usage.md)           |
+| Connect to MCP (all methods)  | [mcpc-usage.md](mcpc-usage.md)           |
 | Swap or bridge tokens         | ../swap/SKILL.md                         |
 | Set up a wallet               | ../wallets/SKILL.md                      |
 
@@ -39,7 +39,7 @@ After completing all three phases, record:
 
 ```
 Environment: <CLI | MCP Desktop | Browser | Headless | Chat-only>
-Access:      <streaming-mcp | stdio-mcp | mcpc | manual>
+Access:      <streaming-mcp | stdio-mcp | manual>
 Signer:      <ows | env-privkey | foundry-cast | browser-wallet | ethers-viem | mcp-wallet | none>
 Wallets:
   <signer_name> "<wallet_label>":
@@ -136,11 +136,11 @@ When **Environment = CLI** or **Headless** with Node.js available, npm packages 
 
 This applies to all npm packages referenced in downstream skills — MCP servers, signing libraries, SDKs, and utilities.
 
-### Calling MCP Tools Without Native MCP Support
+### Connecting to deBridge MCP Without Native Streamable HTTP Support
 
-For environments with Node.js but no native MCP support, use `@apify/mcpc` as a CLI client. Read [mcpc-usage.md](mcpc-usage.md) for full usage.
+For environments that support Streamable HTTP, connect directly to `https://agents.debridge.com/mcp` (see [mcp-setup.md](mcp-setup.md)). For environments that only support stdio transport, use `@debridge-finance/debridge-mcp` — a thin stdio proxy. Read [mcpc-usage.md](mcpc-usage.md) for all connection methods.
 
-Quick start: `npx -y @apify/mcpc connect https://agents.debridge.com/mcp @debridge && npx -y @apify/mcpc @debridge tools-call get_supported_chains`
+Quick start (stdio): `claude mcp add debridge npx -- -y @debridge-finance/debridge-mcp@latest`
 
 ---
 
@@ -157,41 +157,34 @@ Call `mcp__debridge__get_supported_chains` (no parameters).
 
 | Environment  | Recommended Method | Action                                             |
 |--------------|--------------------|----------------------------------------------------|
-| CLI          | mcpc wrapper       | Use mcpc to call MCP tools from the shell — no restart needed |
+| CLI          | streaming-mcp      | `claude mcp add --transport http debridge https://agents.debridge.com/mcp` |
+| CLI (stdio)  | stdio proxy        | `claude mcp add debridge npx -- -y @debridge-finance/debridge-mcp@latest` |
 | MCP Desktop  | streaming-mcp      | Read [mcp-setup.md](mcp-setup.md) for client config |
 | Browser      | manual             | Guide user to set up an MCP-capable environment    |
-| Headless     | stdio-mcp or mcpc  | Read [mcp-setup.md](mcp-setup.md) for SDK setup   |
+| Headless     | stdio-mcp          | Read [mcp-setup.md](mcp-setup.md) for SDK or stdio proxy setup |
 | Chat-only    | manual             | Guide user to set up an MCP-capable environment    |
 
-#### CLI: Use mcpc (preferred — no restart needed)
+#### CLI: Streamable HTTP (preferred)
 
-When running inside Claude Code or any CLI agent, use `@apify/mcpc` to call deBridge MCP tools directly from the shell. This works immediately without restarting the session:
-
-```bash
-# Connect (one-time per session)
-npx -y @apify/mcpc connect https://agents.debridge.com/mcp @debridge
-
-# Now call any deBridge tool
-npx -y @apify/mcpc @debridge tools-call get_supported_chains
-npx -y @apify/mcpc @debridge tools-call search_tokens '{"query":"USDC","chainId":"1"}'
-npx -y @apify/mcpc --json @debridge tools-call create_tx \
-  '{"srcChainId":"1","dstChainId":"42161","srcChainTokenIn":"0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48","dstChainTokenOut":"0xaf88d065e77c8cC2239327C5EDb3A432268e5831","srcChainTokenInAmount":"100000000","dstChainTokenOutRecipient":"0xYourAddress","srcChainOrderAuthorityAddress":"0xYourAddress","dstChainOrderAuthorityAddress":"0xYourAddress"}'
-
-# Close when done
-npx -y @apify/mcpc @debridge close
-```
-
-Read [mcpc-usage.md](mcpc-usage.md) for full details (argument syntax, JSON output, piping).
-
-#### CLI: Persistent MCP setup (alternative — requires restart)
-
-To add deBridge MCP as a permanent server (available in all future sessions without mcpc):
+If the environment supports Streamable HTTP transport, connect directly to the hosted endpoint:
 
 ```bash
 claude mcp add --transport http debridge https://agents.debridge.com/mcp
 ```
 
-This requires restarting the Claude Code session. For Claude Desktop, Cursor, or programmatic SDK setup, read [mcp-setup.md](mcp-setup.md).
+This requires restarting the Claude Code session. After restart, all `mcp__debridge__*` tools are available.
+
+#### CLI: Stdio Proxy (fallback for stdio-only environments)
+
+If the environment only supports stdio transport, use `@debridge-finance/debridge-mcp` as a local proxy:
+
+```bash
+claude mcp add debridge npx -- -y @debridge-finance/debridge-mcp@latest
+```
+
+This requires restarting the Claude Code session. The proxy forwards all requests to `https://agents.debridge.com/mcp` transparently.
+
+Read [mcpc-usage.md](mcpc-usage.md) for all connection methods and configuration details. For Claude Desktop, Cursor, or programmatic SDK setup, read [mcp-setup.md](mcp-setup.md).
 
 ### 2.3 Future Access Methods
 

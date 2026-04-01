@@ -9,7 +9,7 @@
 // The agent calls MCP to get the quote, then pipes it here for signing.
 //
 // Example:
-//   npx -y @apify/mcpc @debridge tools-call create_tx '...' | node debridge-solana-bridge.mjs default
+//   echo '<create_tx JSON from mcp__debridge__create_tx>' | node debridge-solana-bridge.mjs default
 //
 // Requires:
 //   npm install @open-wallet-standard/core

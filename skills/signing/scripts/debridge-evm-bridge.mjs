@@ -9,7 +9,7 @@
 // The agent calls MCP to get the quote, then pipes it here for signing.
 //
 // Example:
-//   npx -y @apify/mcpc @debridge tools-call create_tx '...' | node debridge-evm-bridge.mjs default --src-chain 137
+//   echo '<create_tx JSON from mcp__debridge__create_tx>' | node debridge-evm-bridge.mjs default --src-chain 137
 //
 // Requires:
 //   npm install ethers

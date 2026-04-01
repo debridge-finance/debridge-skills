@@ -29,7 +29,7 @@ Base URI: `https://agents.debridge.com`
 - [MCP Server Configuration by Environment](https://agents.debridge.com/skills/common/mcp-setup.md)
 - [Supported Chains and Token Configuration](https://agents.debridge.com/skills/common/chain-config.md)
 - [RPC Endpoint Discovery via Chainlist](https://agents.debridge.com/skills/common/rpc-discovery.md)
-- [MCP Tool Calls via CLI (mcpc)](https://agents.debridge.com/skills/common/mcpc-usage.md)
+- [MCP Connection Methods](https://agents.debridge.com/skills/common/mcpc-usage.md)
 - [Skill Freshness Check](https://agents.debridge.com/skills/common/skill-freshness.md)
 
 Scripts:

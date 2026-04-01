@@ -16,7 +16,7 @@ Systematically compare every AI-facing surface in the deBridge ecosystem and rep
 
 ## Sources of Truth (ranked)
 
-1. **MCP server tools** — the live tool schemas are the ultimate authority on tool names, parameters, and types. Probe via `mcp__debridge__*` native tools or `mcpc --json @local tools-list --full`.
+1. **MCP server tools** — the live tool schemas are the ultimate authority on tool names, parameters, and types. Probe via `mcp__debridge__*` native tools.
 2. **MCP server skill resources** — the skill://\* resources served by the MCP server. These must match the tools exactly.
 3. **This repo (`debridge-skills`)** — skills under `skills/`, `evals/evals.json`, `skills/index.json`, `llms.txt`.
 4. **Upstream repo (`debridge-finance/debridge-mcp`)** — the `SKILL.md` at the root of the MCP server repo.
@@ -32,19 +32,16 @@ Gather the canonical state from each source. Run all collections in parallel whe
 
 ### 1A. MCP Server Tools (ground truth)
 
-Probe the MCP server for the live tool inventory. Try native MCP tools first, fall back to mcpc.
+Probe the MCP server for the live tool inventory. Use native MCP tools (requires deBridge MCP to be connected — see `skills/common/mcpc-usage.md` for setup).
 
 **Native MCP probe:**
 Call each `mcp__debridge__*` tool that takes no arguments:
 - `mcp__debridge__get_supported_chains` — if this returns data, native MCP is connected
 - `mcp__debridge__get_instructions` — captures the server's canonical workflow
 
-**mcpc probe (if native unavailable or for full schemas):**
-```bash
-npx -y @apify/mcpc connect http://127.0.0.1:3000/mcp @audit 2>/dev/null \
-  || npx -y @apify/mcpc connect https://agents.debridge.com/mcp @audit
-npx -y @apify/mcpc --json @audit tools-list --full
-```
+If native MCP is not connected, add it first:
+- Streamable HTTP: `claude mcp add --transport http debridge https://agents.debridge.com/mcp`
+- Stdio proxy: `claude mcp add debridge npx -- -y @debridge-finance/debridge-mcp@latest`
 
 Record for each tool:
 - `name` — exact tool name
@@ -54,14 +51,9 @@ Record for each tool:
 
 ### 1B. MCP Server Skill Resources
 
-```bash
-npx -y @apify/mcpc @audit resources-list
-```
-
-For each `skill://*` resource:
-```bash
-npx -y @apify/mcpc --json @audit resources-read '<uri>'
-```
+Use MCP resource tools to list and read skill resources:
+- `ListMcpResourcesTool` — list all available resources
+- `ReadMcpResourceTool` — read each `skill://*` resource
 
 Record: skill name, tool names mentioned, parameter names mentioned, workflow steps.
 

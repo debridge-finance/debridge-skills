@@ -44,8 +44,14 @@ Add to `.cursor/mcp.json`, `.windsurf/mcp.json`, or equivalent IDE MCP config:
 
 ## Claude Code (CLI)
 
+Streamable HTTP (preferred):
 ```bash
 claude mcp add --transport http debridge https://agents.debridge.com/mcp
+```
+
+Stdio proxy (for environments without Streamable HTTP support):
+```bash
+claude mcp add debridge npx -- -y @debridge-finance/debridge-mcp@latest
 ```
 
 ---

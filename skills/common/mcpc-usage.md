@@ -1,42 +1,80 @@
 ---
-title: MCP Tool Calls via CLI (mcpc)
+title: MCP Connection Methods
 impact: LOW
-impactDescription: "Edge-case CLI client for environments without native MCP support"
-tags: mcpc, apify, cli, mcp-client, one-shot
+impactDescription: "Setup guide for connecting to deBridge MCP across different environments"
+tags: debridge-mcp, proxy, cli, mcp-client, stdio, streamable-http
 ---
 
-# Calling MCP Tools Without Native MCP Support
+# Connecting to deBridge MCP
 
-Some environments have Node.js and shell access but cannot add MCP servers natively (no `claude mcp add`, no config file, or adding an MCP requires a restart). For one-shot MCP tool calls from the command line, use `@apify/mcpc` — a universal CLI client for MCP:
+## Recommended: Direct Streamable HTTP Connection
 
-```bash
-# 1. Connect to an MCP server (creates a named session)
-npx -y @apify/mcpc connect https://agents.debridge.com/mcp @debridge
+If your environment supports Streamable HTTP MCP transport, connect directly to the hosted endpoint — no installation, no local process:
 
-# 2. List available tools
-npx -y @apify/mcpc @debridge tools-list
-
-# 3. Call a tool with arguments
-npx -y @apify/mcpc @debridge tools-call get_supported_chains
-
-npx -y @apify/mcpc @debridge tools-call search_tokens \
-  '{"query":"USDC","chainId":"1"}'
-
-npx -y @apify/mcpc --json @debridge tools-call create_tx \
-  '{"srcChainId":"1","dstChainId":"42161","srcChainTokenIn":"0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48","dstChainTokenOut":"0xaf88d065e77c8cC2239327C5EDb3A432268e5831","srcChainTokenInAmount":"100000000","dstChainTokenOutRecipient":"0xYourAddress","srcChainOrderAuthorityAddress":"0xYourAddress","dstChainOrderAuthorityAddress":"0xYourAddress"}'
-
-# 4. Close session when done
-npx -y @apify/mcpc @debridge close
+```
+https://agents.debridge.com/mcp
 ```
 
-**CLI syntax:** `mcpc [options] [<@session>] [<command>]` — `connect` is a top-level command; session-based commands use `@session` before the command.
+### Claude Code (CLI & IDE plugins)
 
-- **Connect:** `connect` is the command, followed by URL and session → `mcpc connect <url> @name`
-- **Call/list/close:** target is the session → `mcpc @name tools-call ...`, `mcpc @name close`
+```bash
+claude mcp add --transport http debridge https://agents.debridge.com/mcp
+```
+
+### Generic Streamable HTTP configuration
+
+```json
+{
+  "mcpServers": {
+    "debridge": {
+      "type": "streamable-http",
+      "url": "https://agents.debridge.com/mcp"
+    }
+  }
+}
+```
+
+This works in Claude Desktop, Cursor, Windsurf, VS Code (GitHub Copilot), Cline, Continue, Zed, and any agent that supports Streamable HTTP transport.
+
+---
+
+## Fallback: Stdio Proxy via @debridge-finance/debridge-mcp
+
+Some agent frameworks only support stdio transport and cannot connect to a remote HTTP endpoint directly. Use `@debridge-finance/debridge-mcp` — a thin stdio proxy that forwards all requests to the hosted deBridge MCP:
+
+### Claude Code (CLI & IDE plugins)
+
+```bash
+claude mcp add debridge npx -- -y @debridge-finance/debridge-mcp@latest
+```
+
+### Generic stdio configuration
+
+```json
+{
+  "mcpServers": {
+    "debridge": {
+      "command": "npx",
+      "args": ["-y", "@debridge-finance/debridge-mcp@latest"]
+    }
+  }
+}
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `REMOTE_MCP_URL` | `https://agents.debridge.com/mcp` | Remote MCP endpoint to proxy to |
+| `MCP_TRANSPORT` | `stdio` | Transport mode: `stdio` or `http` |
+| `PORT` | `3000` | HTTP listen port (HTTP mode only) |
 
 Key details:
-- Arguments use `:=` syntax. Types are auto-detected: `count:=10` → number, `name:=hello` → string.
-- Force string type with extra quotes: `amount:='"100000000"'` (important for raw unit amounts).
-- Add `--json` before the session name for machine-readable JSON output.
-- Pipe JSON arguments from stdin: `echo '{"chainId":1}' | npx -y @apify/mcpc @debridge tools-call search_tokens`
-- Works with any MCP server, not just deBridge. Connect to Blockscout, CoinGecko, etc. the same way.
+- The proxy dynamically discovers tools and resources from the upstream endpoint — no local tool definitions needed.
+- In stdio mode (default), it opens a long-lived connection to the upstream MCP and mirrors capabilities locally.
+- In HTTP mode (`MCP_TRANSPORT=http`), it runs an Express reverse proxy on `localhost:3000/mcp`.
+- Works anywhere `npx` is available — no global install required.
+
+---
+
+After setup via either method, verify the connection by calling `mcp__debridge__get_supported_chains` (no parameters). If it returns chain data, MCP is ready.

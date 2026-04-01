@@ -6,7 +6,7 @@
   "skills": [
     {
       "name": "debridge-common",
-      "description": "Shared prerequisite for all deBridge agent skills. Runs three stages: ENVIRONMENT_DETECTION (CLI, MCP Desktop, browser, headless, chat-only), ACCESS_SETUP (streaming MCP, stdio MCP, mcpc, SDK), and WALLET_DISCOVERY (auto-discover all signers and resolve wallet addresses). Run this first before any deBridge operation. Use whenever the user mentions deBridge for the first time in a session, asks about supported chains, needs to connect to deBridge MCP, or wants to check what signing methods are available. Also use when troubleshooting deBridge connectivity, checking environment capabilities, or setting up RPC endpoints.",
+      "description": "Shared prerequisite for all deBridge agent skills. Runs three stages: ENVIRONMENT_DETECTION (CLI, MCP Desktop, browser, headless, chat-only), ACCESS_SETUP (streaming MCP, stdio MCP via @debridge-finance/debridge-mcp, SDK), and WALLET_DISCOVERY (auto-discover all signers and resolve wallet addresses). Run this first before any deBridge operation. Use whenever the user mentions deBridge for the first time in a session, asks about supported chains, needs to connect to deBridge MCP, or wants to check what signing methods are available. Also use when troubleshooting deBridge connectivity, checking environment capabilities, or setting up RPC endpoints.",
       "entry_point": "skills/common/SKILL.md",
       "references": [
         "skills/common/chain-config.md",
