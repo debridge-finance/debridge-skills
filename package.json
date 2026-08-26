@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
-    "tsx": "^4.21.0"
+    "tsx": "^4.23.12"
   },
   "dependencies": {
     "@open-wallet-standard/core": "^1.1.2",
